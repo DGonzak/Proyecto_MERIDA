@@ -1,0 +1,98 @@
+/* estilos.css — MERIDA (GTK4 + libadwaita) */
+
+/* Paleta propia */
+@define-color merida-dark-bg     #303030;
+@define-color merida-dark-fg     #ffffff;
+@define-color merida-dark-border #000000;
+@define-color merida-dark-shadow rgba(255, 255, 255, 0.15);
+
+@define-color merida-light-bg     #fdfdfd;
+@define-color merida-light-fg     #1f1f1f;
+@define-color merida-light-border #999999;
+
+/* =========================
+   TEMA CLARO (clase .light)
+   ========================= */
+
+.light .nota-contenedor {
+  background-color: @merida-light-bg;
+  border: 2px solid @merida-light-border;
+  border-radius: 6px;
+  margin-bottom: 6px;
+  padding: 6px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.15);
+}
+
+.light .nota-contenedor:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+}
+
+.light .nota-textview,
+.light .textview_Princi-focus {
+  background-color: @merida-light-bg;
+  color: @merida-light-fg;
+  border: 1px solid @merida-light-border;
+  padding: 2px;
+}
+
+.light .nota-textview:focus,
+.light .textview_Princi-focus:focus {
+  border: 2px solid #01011F;
+  box-shadow: 0 0 4px rgba(0,0,0,0.25);
+}
+
+.light .boxs_filtradas {
+  background-color: @merida-light-bg;
+  border: 2px solid @merida-light-border;
+  border-radius: 4px;
+  padding: 4px;
+  opacity: .8;
+}
+
+.light .Present_Boxs_Over {
+  background-color: rgba(0, 0, 0, 0.4); /*negro semitransparente */
+  padding: 10px;
+}
+
+/* =========================
+   TEMA OSCURO (clase .dark)
+   ========================= */
+
+.dark .nota-contenedor {
+  border: 2px solid @merida-dark-border;
+  border-radius: 6px;
+  margin-bottom: 6px;
+  padding: 6px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.4);
+}
+
+.dark .nota-contenedor:hover {
+  box-shadow: 0 2px 8px @merida-dark-shadow;
+}
+
+.dark .nota-textview,
+.dark .textview_Princi-focus {
+  color: @merida-dark-fg;
+  border: 1px solid @merida-dark-border;
+  padding: 2px;
+}
+
+
+.dark .nota-textview:focus,
+.dark .textview_Princi-focus:focus {
+  border: 2px solid #01011F;
+  box-shadow: 0 0 4px rgba(255,255,255,0.25);
+}
+
+.dark .boxs_filtradas {
+  background-color: @merida-dark-bg;
+  border: 2px solid @merida-dark-border;
+  border-radius: 4px;
+  padding: 4px;
+  opacity: .8;
+}
+
+.dark .Present_Boxs_Over {
+  background-color: rgba(0, 0, 0, 0.4); /*negro semitransparente */
+  padding: 10px;
+}

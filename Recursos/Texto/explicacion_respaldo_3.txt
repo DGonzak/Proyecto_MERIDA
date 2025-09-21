@@ -1,0 +1,11 @@
+Para realizar el respaldo de una base de datos individual tome en cuenta lo siguiente:
+
+    1. El proceso de respaldo creará dos archivos de respaldo: .sqlite y .sql. Ambos pueden ser usados para la restauración de una base de datos desde los sistemas correspondientes.
+
+    2. Ambos archivos de respaldo se crearán bajo el nombre y la fecha en que se realiza el respaldo y estarán ubicados en la carpeta de respaldo registrada en la base de datos INFORMADORA.
+
+    3. Aseguresé que los archivos de respaldo estén  ubicados bajo la siguiente jerarquía:
+        |Carpeta raíz (ej. Respaldo_BD)
+            |Carpeta Secundaria (ej. BD_TAGS)
+                |Archivos de respaldo (ej. BD_TAGS_respaldo_2025-07-29_16-10.sql y BD_TAGS_respaldo_2025-07-29_16-10.sqlite)
+

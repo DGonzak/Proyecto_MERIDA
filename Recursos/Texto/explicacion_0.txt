@@ -1,0 +1,1 @@
+Si usted ve este mensaje, es posible que los archivos tmp en "Recursos/Texto" no se estén cargando correctamente al programa.

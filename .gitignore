@@ -1,0 +1,29 @@
+# --- Archivos de Python ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+*.egg
+*.log
+O
+
+# --- Archivos del sistema operativo ---
+.DS_Store
+Thumbs.db
+ehthumbs.db
+*.swp
+*~
+.cache/
+*.bak
+
+
+# --- Archivos de logs o temporales ---
+*.tmp
+*.temp
+*.log
+logs/
+debug.log
+
+

@@ -1,0 +1,11 @@
+Para la reconstrucción INDIVIDUAL de una base de datos tenga en cuenta lo siguiente:
+
+    1. El proceso que sigue a la reconstrucción involucra la ELIMINACIÓN del archivo y del registro de la base de datos a reconstruir. Esto no se puede deshacer, por lo que se recomienda realizar una copia de respaldo (manual o mediante el programa) antes de iniciar la reconstrucción.
+
+    2. El proceso volverá a crear la base de datos según indicaciones programadas. Esto significa que se restaurará los valores predeterminados (si existen) de la base de datos a reconstruir.
+
+    3. Tome en cuenta que luego de la reconstrucción de una base de datos, el programa necesita ser reiniciado para ingresar los datos predeterminados. Esto es importante en bases de datos del sistema ya que el programa necesita trabajar con ciertas funciones. Si por alguna razón el programa no detecta un "reinicio por reconstrucción de bases de datos" cuando vuelva a iniciar el programa, por favor, aplique todos los valores predeterminados posibles en la pantalla de ajustes generales del programa.
+
+    4. Por último, tome en cuenta que la reconstrucción de bases de datos solo funciona con las propias del sistema, es decir, aquellas cuyo ORIGEN sea "Sistema". AÚN NO ESTÁ DISPONIBLE PARA BASES DE DATOS CREADAS POR LOS USUARIOS.
+
+

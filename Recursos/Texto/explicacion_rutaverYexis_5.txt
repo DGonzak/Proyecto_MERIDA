@@ -1,0 +1,10 @@
+Para verificar la existencia y ruta de la base de datos, por favor tenga en cuenta lo siguiente:
+
+    1. Esta opción cambia la propiedad "Estado" de las bases de datos registradas en la base de datos INFORMADORA. Dicha propiedad solo acepta "Existente (True) o Inexistente (False)"
+
+    2.Además, se verifica las rutas registradas de la base de datos. Estas son:
+        -Ruta de UBICACIÓN: Ruta absoluta donde el archivo de la base de datos se encuentra.
+
+        -Ruta de RESPALDO: Ruta absoluta donde se encuentra la carpeta en la cual se guardan los respaldos de dicha base de datos.
+
+    3. Tenga en cuenta que esta opción no modifica ningún campo de las bases de datos a excepción del ESTADO.

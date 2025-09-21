@@ -1,0 +1,5 @@
+MERIDA es un software de escritura creado especialmente para autores que buscan una herramienta práctica y flexible para organizar sus ideas y dar forma a sus obras.
+
+A diferencia de los procesadores de texto tradicionales, MERIDA está diseñado para acompañar el proceso creativo. Permite trabajar con proyectos extensos, gestionar notas y etiquetas, relacionar documentos y mantener un control estructurado de la obra en desarrollo gracias a su enfoque modular (un archivo, una idea). El programa se encuentra en constante desarrollo, incorporando nuevas funciones y perfeccionando las ya existentes.
+
+MERIDA no es solo un editor, sino una plataforma de apoyo integral a la escritura, que crece con las necesidades del autor y evoluciona con cada versión. Todo ello bajo un modelo libre y gratuito para la comunidad de escritores.

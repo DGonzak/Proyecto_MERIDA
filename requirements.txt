@@ -1,0 +1,10 @@
+greenlet==3.2.1
+Markdown==3.8
+platformdirs==4.3.8
+pycairo==1.28.0
+PyGObject==3.52.3
+python-dateutil==2.9.0.post0
+pytz==2025.2
+six==1.17.0
+SQLAlchemy==2.0.40
+typing_extensions==4.13.2

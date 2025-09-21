@@ -1,0 +1,22 @@
+Para iniciar la restauración de una base de datos individualmente, tome en cuenta lo siguiente:
+
+    1. El proceso de restauración involucra la sustitución de los datos actuales de la base de datos por los que contenga el archivo de restauración.
+
+    2. Existen dos tipos de archivos de restauración: .sqlite y .sql. El archivo binario (.sqlite) es la copia directa del archivo .sqlite original; por otro lado, el archivo de texto .sql contiene la "instrucciones" de creación y contenido de la base de datos original.
+
+    3. Este sistema, a diferencia del sistema de restauración de bases de datos CONJUNTAS, no da la opción de seleccionar con que tipo de archivo de restauración trabajar. El sistema inspeccionará automáticamente la ruta de respaldo registrada en la base de datos INFORMADORA y seleccionará:
+        - .sqlite: Si existe, ya que es la opción predeterminada.
+
+        - .sql: Si el archivo .sqlite no existe.
+
+    4. No olvide que, para que el sistema pueda reconocer los archivos de restauración, debe seguir la siguiente jerarquía:
+
+        |Carpeta raíz (ej. Respaldo_BD)
+            |Carpeta Secundaria (ej. BD_TAGS)
+                |Archivos de respaldo (ej. BD_TAGS_respaldo_2025-07-29_16-10.sql y BD_TAGS_respaldo_2025-07-29_16-10.sqlite)
+
+    Si no se sigue esta jerarquía, el sistema no funcionará o lo hará con serios errores.
+
+    5. Además, no olvide que el sistema busca y selecciona el archivo de restauración más "reciente" siguiendo el nombre establecido (ej.BD_TAGS_respaldo_2025-07-29_16-10.sqlite).
+
+    6. Por último, este sistema solo funciona con bases de datos cuyo origen sea SISTEMA. NO FUNCIONA CON BASES DE DATOS CREADAS POR LOS USUARIOS.

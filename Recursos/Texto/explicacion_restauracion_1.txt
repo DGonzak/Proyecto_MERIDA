@@ -1,0 +1,23 @@
+Para iniciar la restauración, seleccione una carpeta que contenga los archivos de restauración.
+
+Tome en cuenta que este sistema de restauración esta pensado para ser usado en dos situaciones importantes:
+    1. Cuando la base de datos INFORMADORA no contiene los datos requeridos dado que: esta vacía, con datos erroneos o, por alguna razón, es imposible usarla normalmente.
+
+    2. Cuando se desea realizar restauraciones "grupales". El sistema permite seleccionar una carpeta que contenga varios archivos de restauración de varias bases de datos siempre y cuando sigan la estructura requerida para ello. Tenga en cuenta que, por el momento, el sistema no permite seleccionar varias bases de datos de una carpeta, es decir, TODAS las bases de datos "encontradas" en la carpeta de restauración escogida serán usadas para la restauración.
+
+La estructura de la carpeta de restauración debe ser la siguiente:
+    -Carpeta Padre (o raíz)
+        |-Carpeta individual de respaldo (subcarpetas)
+            |-archivos de restauración
+
+Existen dos tipos de archivos de restauración:
+    1. sqlite: Es una copia directa del archivo original de la base de datos. Es más rápido y simple de restaurar.
+
+    2. sql: Es un archivo de texto que contiene las órdenes necesarias para recrear la base de datos desde cero. Se usa cuando el archivo .sqlite está dañado o no puede abrirse.
+
+El programa necesita saber con que extensión de archivo de restauración debe trabajar:
+    -Seleccione .sqlite si los archivos están en buen estado.
+
+    -Seleccione .sql solo si necesita reconstruir la base de datos desde cero ("desde intrucciones").
+
+Recomendación: use siempre los archivos binarios (.sqlite) como primera opción. Recurra a .sql únicamente si el archivo principal está dañado, no exista o desea reconstruir desde cero la base de datos. La mayoría de las veces, será suficiente con la opción predeterminada (.sqlite).
