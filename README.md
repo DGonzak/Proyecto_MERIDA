@@ -66,10 +66,10 @@ Actualmente se ofrecen los siguientes métodos de instalación:
 
 - **Linux (Debian y derivados)**: Paquetes `.deb` que pueden instalarse directamente mediante el gestor de paquetes del sistema (`dpkg -i merida_1.0.deb`).
 
-También puede optar por descargar el **código fuente** y ejecutar el programa directamente:
+También puede optar por descargar el **código fuente** y ejecutar el programa directamente (se usa, como ejemplo, el método https):
 
 ```bash
-git clone https://github.com/DGonzak/merida.git
+git clone https://github.com/DGonzak/Proyecto_MERIDA.git
 cd merida
 python3 main.py
 ```
