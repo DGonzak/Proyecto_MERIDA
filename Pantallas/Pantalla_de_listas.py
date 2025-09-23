@@ -86,8 +86,6 @@ class pantalla_listas(Gtk.Window):
             columna = Gtk.ColumnViewColumn(title=titulo, factory=factory)
             self.columnview.append_column(columna)
 
-
-
     def bind_label(self):
         """
         Crea y configura las columnas visibles de un `Gtk.ColumnView`, en este caso, de

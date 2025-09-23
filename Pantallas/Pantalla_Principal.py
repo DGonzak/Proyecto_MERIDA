@@ -38,10 +38,12 @@ from Pantallas.Clases_Pantalla_Principal.Espacio_Central.Editor_Central import V
 
 from Pantallas.Pantalla_de_listas import pantalla_listas
 from Pantallas.Pantalla_Acerca_de import Pantalla_AcercaDe
+from Pantallas.Vista_Modulos import pantalla_modulos
 
 from Pantallas.Pantalla_administrativa import pantalla_admins
 from Pantallas.Clases_Pantalla_Administrativa.Vista_BaseDeDatos import Vista_Base_De_Datos
 from Pantallas.Clases_Pantalla_Administrativa.Vista_AjustesEstilo import Vista_AjustesEstilo
+
 
 from Lib_Extra.Funciones_extras import Reempla_espacios_nombre, mostrar_vent_IEO, aplicar_estilos_css, control_label_estado, Restaurar_espacios_nombre,leer_archivo_recurrente,filtrar_archivos_por_extension_BD,crear_archivos_recurrentes
 from Lib_Extra.Rutas_Gestion import get_data_dir,get_recursos_dir
@@ -328,6 +330,7 @@ class Pantalla_Principal(Gtk.ApplicationWindow):
             "listas": self.abrir_listas,
             "acerca": self.abrir_Acercade,
             "nuevo": self.limpiar_todo,
+            "modulos": self.abrir_modulos
         }
 
         for nombre, callback in acciones.items():
@@ -350,6 +353,7 @@ class Pantalla_Principal(Gtk.ApplicationWindow):
         menu_admin = Gio.Menu()
         menu_admin.append("Preferencias", "win.preferencias")
         menu_admin.append("Ver listas", "win.listas")
+        menu_admin.append("Módulos/Complementos","win.modulos")
         menu.append_submenu("Administrar", menu_admin)
 
         # Menú "Ayuda"
@@ -661,6 +665,14 @@ class Pantalla_Principal(Gtk.ApplicationWindow):
 
         # Vaciar (eliminar) las notas
         self.Pestana_Notas_Tex_get.eliminar_todas_las_notastex()
+
+    def abrir_modulos(self, widget=None, *args):
+        """
+        Abre la ventana de gestión de módulos y complementos del programa.
+        """
+        ventana_modulos = pantalla_modulos()
+        ventana_modulos.present()
+        
 
     #-------Funciones relacionadas al manejo de archivos (MERIDA)--------------------
     def abrir_archivo_ArbolArch(self, ruta_archivo_get):
