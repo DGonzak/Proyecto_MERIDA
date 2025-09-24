@@ -48,6 +48,7 @@ from Pantallas.Clases_Pantalla_Administrativa.Vista_AjustesEstilo import Vista_A
 from Lib_Extra.Funciones_extras import Reempla_espacios_nombre, mostrar_vent_IEO, aplicar_estilos_css, control_label_estado, Restaurar_espacios_nombre,leer_archivo_recurrente,filtrar_archivos_por_extension_BD,crear_archivos_recurrentes
 from Lib_Extra.Rutas_Gestion import get_data_dir,get_recursos_dir
 from Lib_Extra.Gestion_Dict_EDITOR import Gestor_Variable_ActuEtiquetas
+from Lib_Extra.API_MERIDA import MERIDA_API
 
 from BDs_Functions.Models_BD import BD_Tags_General, BD_Comb_Teclas, BD_Recient_Arch
 from BDs_Functions.BD_Comtecl_Funct import BD_ComTecl_Functions
@@ -90,6 +91,8 @@ class Pantalla_Principal(Gtk.ApplicationWindow):
         self.Pestana_de_Notificaciones_get = Pestana_Notificaciones()
 
         self. Gestor_Variable_ActuEtiquetas = Gestor_Variable_ActuEtiquetas()
+
+        self.MERIDA_API = MERIDA_API(self)
         
         ruta_estilos = os.path.join(get_recursos_dir(), "Estilo_CSS", "estilo_base.css")
         aplicar_estilos_css(ruta_css=ruta_estilos)
@@ -388,7 +391,7 @@ class Pantalla_Principal(Gtk.ApplicationWindow):
         # ----------------Barra Lateral Izquierda------------------------------------
 
         self.Notebook_Izquierda.append_page(self.Pestana_Notas_Tex_get, Gtk.Label(label="Notas"))
-        
+
         self.vbox_Izquierda.append(scroll_NotebookI)
 
         return self.vbox_Izquierda
