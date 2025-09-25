@@ -1409,7 +1409,7 @@ class Vista_Base_De_Datos(Gtk.Box):
             estado_reconstr, error_reconstr = self.BD_Informadora_Functions.reconstruir_base_de_datos_completa()
 
             if not estado_reconstr:
-                mostrar_mensaje(f"Error crítico: {error_reconstruccion}")
+                mostrar_mensaje(f"Error crítico: {error_reconstr}")
                 return False
 
             mostrar_mensaje("Insertando valores predeterminados y verificando existencia y estado...")

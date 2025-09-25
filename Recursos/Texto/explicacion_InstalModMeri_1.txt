@@ -1,0 +1,12 @@
+¡Bienvenido al sistema de instalación de módulos/complementos de MERIDA!
+
+Para instalar un nuevo módulo, tome en cuenta lo siguiente:
+    1. El sistema de instalación solo acepta paquetes .modmeri (Módulos de MERIDA).
+    2. El sistema de instalación permite la instalación de módulos en lote, es decir, puede instalar varios módulos a la vez.
+    3. Si desea instalar varios módulos a la vez, por favor seleccione la opción "Instalar desde carpeta" y siga las siguientes instrucciones:
+        -Seleccione una carpeta que contenga todos los archivo .modmeri que desee instalar
+        -Verifique la información presentada sobre dichos módulos
+        -Confirme dicha información. El sistema de encargará de instalar todos los módulos.
+    4. Si por el contrario, desea instalar un solo módulo de MERIDA, seleccione la opción: "Instalar desde archivo". El procedimiento es el mismo comparado con la instalación por lotes. Confirme los datos presentados y el programa comenzará con la instalación.
+    5. Tenga en cuenta que el sistema crea un log (registro) por cada instalación hecha de algún módulo y lo guarda en la ubicación predeterminada para este tema. Para más información al respecto, consulte el manual de usuario de MERIDA.
+
