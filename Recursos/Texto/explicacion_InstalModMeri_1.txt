@@ -10,3 +10,5 @@ Para instalar un nuevo módulo, tome en cuenta lo siguiente:
     4. Si por el contrario, desea instalar un solo módulo de MERIDA, seleccione la opción: "Instalar desde archivo". El procedimiento es el mismo comparado con la instalación por lotes. Confirme los datos presentados y el programa comenzará con la instalación.
     5. Tenga en cuenta que el sistema crea un log (registro) por cada instalación hecha de algún módulo y lo guarda en la ubicación predeterminada para este tema. Para más información al respecto, consulte el manual de usuario de MERIDA.
 
+    Por ultimo, recuerda instalar módulos de fuentes confiables.
+
