@@ -232,7 +232,7 @@ class pantalla_modulos(Gtk.Window):
         except Exception:
             try:
                 # fallback a importlib_metadata si está instalado
-                from importlib_metadata import version as _pkg_version, PackageNotFoundError
+                from importlib.metadata import version as _pkg_version, PackageNotFoundError
                 _can_check_deps = True
             except Exception:
                 _pkg_version = None

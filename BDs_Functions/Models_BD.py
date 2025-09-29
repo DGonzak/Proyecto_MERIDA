@@ -99,3 +99,60 @@ class BDInformadora(Base):
     	String(250),
     	nullable=False,
     	doc="Ruta fisica o vitual destinada para resguardar el respaldo (backup)")
+	
+class BD_Moduls(Base):
+
+	__tablename__ = "Base de Datos: MODULOS"
+
+	ID = Column(Integer(), primary_key=True, autoincrement=True)
+
+	Nombre_Modulo = Column(
+		String(60),
+		nullable=False,
+		unique=True)
+
+	Identificador_Modulo = Column(
+		String(60),
+		nullable=False,
+		unique=True)
+
+	Version_Modulo = Column(
+		String(20),
+		nullable=False)
+
+	Autor_Modulo = Column(
+		String(100),
+		nullable=False)
+
+	CorreoElectronico_Autor = Column(
+		String(100),
+		nullable=False)
+	
+	Descripcion_Modulo = Column(
+		String(200),
+		nullable=False)
+	
+	Arch_Principal_Ejecucion = Column(
+		String(100),
+		nullable=False)
+	
+	Recursos_Adicionales = Column(
+		String(200),
+		nullable=True)
+	
+	Dependencias_Especiales = Column(
+		String(200),
+		nullable=True)
+
+	Estado_Modulo = Column(
+		Boolean,
+		nullable=False,
+		default=True)
+	
+	Fecha_Instalacion = Column(
+		DateTime,
+		default=datetime.utcnow)
+
+	Ubicacion_Modulo = Column(
+		String(200),
+		nullable=False)	

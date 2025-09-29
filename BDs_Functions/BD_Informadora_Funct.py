@@ -55,6 +55,16 @@ class BD_Informadora_Functions ():
                 "permisos": "lectura/escritura",
                 "ubicacion": "Sin comprobar",
                 "ubicacion_respaldo": "Sin comprobar"
+            },
+            {
+                "nombre": "BD_Moduls",
+                "descripcion": "Base de datos para almacenar la información de los módulos instalados en el sistema",
+                "estado": False,
+                "tipo": "SQLite",
+                "origen": "Sistema",
+                "permisos": "lectura/escritura",
+                "ubicacion": "Sin comprobar",
+                "ubicacion_respaldo": "Sin comprobar"
             }
 
         ]
