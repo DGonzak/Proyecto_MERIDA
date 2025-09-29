@@ -16,7 +16,7 @@ class BD_Moduls_Functions():
 
     def __init__ (self):
         #para la conexión, no para la creación de la bD
-        self.ruta_bd = os.path.join(get_data_dir(),"BDs", "BD_Modulos.sqlite")
+        self.ruta_bd = os.path.join(get_data_dir(),"BDs", "BD_Moduls.sqlite")
         self.conexion = sqlal.create_engine(f"sqlite:///{self.ruta_bd}", future=True)
 
 

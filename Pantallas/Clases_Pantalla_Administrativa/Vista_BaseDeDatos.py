@@ -156,7 +156,8 @@ class Vista_Base_De_Datos(Gtk.Box):
             "BD_ComTecl.sqlite",
             "BD_RecentArch.sqlite",
             "BD_TAGS.sqlite",
-            "BD_Informadora.sqlite"
+            "BD_Informadora.sqlite",
+            "BD_Moduls.sqlite"
         ]
 
         for nombre_bd in nombres_bds:
@@ -2727,17 +2728,11 @@ class Vista_Base_De_Datos(Gtk.Box):
         """
         Verifica la existencia y rutas de una base de datos individual.
 
+        - Si la ruta de la BD es "Sin comprobar", intenta localizar la base de datos en la carpeta predeterminada.
         - Comprueba si la ruta principal del archivo `.sqlite` existe.
-        - Cambia el estado de la base de datos a `True` (existente) o `False` (inexistente) en la base de datos informadora.
-        - Verifica la ruta de respaldo y la actualiza con valores predeterminados si es "sin comprobar".
-        - Muestra mensajes de estado y progreso durante todo el proceso.
-
-        Args:
-            boton (Gtk.Button): Botón que inició la acción.
-            control_mensajes_infor_C (function): Función para mostrar mensajes de estado y progreso.
-            textview (Gtk.TextView): Área de texto para mostrar mensajes detallados.
-            spinner (Gtk.Spinner): Indicador de proceso en ejecución.
-            ventana (Gtk.Dialog): Ventana que contiene la interfaz de la acción.
+        - Cambia el estado de la base de datos en la base de datos informadora (existente o inexistente).
+        - Verifica y registra la ruta de respaldo si está marcada como "sin comprobar".
+        - Muestra mensajes detallados durante todo el proceso.
         """
 
         spinner.start()
@@ -2749,57 +2744,97 @@ class Vista_Base_De_Datos(Gtk.Box):
         ubicacion_arch = self.Entry_ubicacionBD.get_text()
         ubicacion_respald = self.Entry_ubicacionResBD.get_text()
 
-        #Verificacion de la existencia según la ubicación de la base de datos
+        
+        if ubicacion_arch.lower() == "sin comprobar":
+            control_mensajes_infor_C(
+                "Ruta sin comprobar detectada",
+                f"[INFO] Se detectó que la base de datos <<{nombre_bd}>> no tiene ruta verificada. Iniciando búsqueda en carpeta predeterminada..."
+            )
+
+            ruta_bds = os.path.join(get_data_dir(), "BDs")
+            if os.path.isdir(ruta_bds):
+                archivos_bds = [f for f in os.listdir(ruta_bds) if os.path.isfile(os.path.join(ruta_bds, f))]
+                encontrado = False
+
+                for archivo in archivos_bds:
+                    nombre_sin_ext, _ = os.path.splitext(archivo)
+                    if nombre_sin_ext == nombre_bd:
+                        ubicacion_arch = os.path.join(ruta_bds, archivo)
+                        self.Entry_ubicacionBD.set_text(ubicacion_arch)
+                        control_mensajes_infor_C(
+                            None,
+                            f"[OK] Se encontró la base de datos <<{archivo}>> en la carpeta predeterminada. Usando esta ruta para verificación."
+                        )
+                        encontrado = True
+                        self.BD_Informadora_Functions.modificar_UNA_propiedad(nombre_bd, "ubicacion", ubicacion_arch)
+
+                        break
+
+                if not encontrado:
+                    control_mensajes_infor_C(
+                        "Base de datos no encontrada",
+                        f"[ADVERTENCIA] No se encontró ninguna base de datos llamada <<{nombre_bd}>> en {ruta_bds}. La verificación puede fallar."
+                    )
+            else:
+                control_mensajes_infor_C(
+                    "Carpeta de BDs no encontrada",
+                    f"[ERROR] La carpeta predeterminada de BDs ({ruta_bds}) no existe. No se puede verificar la base de datos."
+                )
+
+        # --- Verificación de existencia ---
         control_mensajes_infor_C(
             "Verificando ruta absoluta del archivo sqlite",
-            f"Verificando ruta absoluta del archivo <<{nombre_bd}>>: {ubicacion_arch}")
+            f"Verificando ruta absoluta del archivo <<{nombre_bd}>>: {ubicacion_arch}"
+        )
 
         existe = self.verificar_BD_Existencia(ubicacion_arch)
 
         if existe:
             control_mensajes_infor_C(
                 None,
-                f"[OK] Verificación exitosa para el archivo <<{ubicacion_arch}>>...")
-
+                f"[OK] Verificación exitosa para el archivo <<{ubicacion_arch}>>..."
+            )
             control_mensajes_infor_C(
                 "Cambiando ESTADO de la base de datos",
-                f"Iniciando cambio del estado registrado de <<{nombre_bd}>> a Existente...")
+                f"Iniciando cambio del estado registrado de <<{nombre_bd}>> a Existente..."
+            )
             self.BD_Informadora_Functions.modificar_UNA_propiedad(nombre_bd, "estado", True)
-
         else:
             control_mensajes_infor_C(
                 None,
-                f"[OK] Verificación fracasada para el archivo <<{ubicacion_arch}>>...")
-
+                f"[ERROR] Verificación fracasada para el archivo <<{ubicacion_arch}>>..."
+            )
             control_mensajes_infor_C(
                 "Cambiando ESTADO de la base de datos",
-                f"Iniciando cambio del estado registrado de <<{nombre_bd}>> a INEXISTENTE...")
+                f"Iniciando cambio del estado registrado de <<{nombre_bd}>> a INEXISTENTE..."
+            )
             self.BD_Informadora_Functions.modificar_UNA_propiedad(nombre_bd, "estado", False)
 
-
-        #Verificación de la ruta de respaldo de la base de datos
+        # --- Verificación de la ruta de respaldo ---
         control_mensajes_infor_C(
             "Verificando ruta absoluta de respaldo de la base de datos",
-            f"Verificando ruta absoluta de respaldos para <<{nombre_bd}>> en <<{ubicacion_respald}>>...")
+            f"Verificando ruta absoluta de respaldos para <<{nombre_bd}>> en <<{ubicacion_respald}>>..."
+        )
         id_bd = self.BD_Informadora_Functions.obtener_id_registro("nombre", nombre_bd)
 
         if ubicacion_respald.lower() == "sin comprobar":
             control_mensajes_infor_C(
-                "Verificación finalizada",
-                f"Se ha detectado rutas sin comprobar en <<{nombre_bd}>>. Añadiendo rutas predeterminadas (si existen)...")
+                "Registro de ruta de respaldo",
+                f"[INFO] Se ha detectado rutas sin comprobar en <<{nombre_bd}>>. Intentando registrar rutas predeterminadas..."
+            )
             self.insertar_ubicacion_respaldo(id_bd)
-            control_mensajes_infor_C(None, f"[OK] Registro de ruta de respaldo terminado con exito (solo para origen SISTEMA)...")
-
+            control_mensajes_infor_C(
+                None,
+                f"[OK] Registro de ruta de respaldo terminado con éxito (solo para origen SISTEMA)."
+            )
         else:
             control_mensajes_infor_C(
                 "Verificación finalizada",
-                f"[OK] No se ha detectado rutas sin comprobar en <<{nombre_bd}>>")
+                f"[OK] No se ha detectado rutas sin comprobar en <<{nombre_bd}>>"
+            )
 
-        #Finalizando procesos
-        control_mensajes_infor_C(
-            "Finalizando procesos",
-            "Verificaciones finalizadas. Terminando procesos pendientes...")
+        # --- Finalizando procesos ---
+        control_mensajes_infor_C("Finalizando procesos", "Verificaciones finalizadas. Terminando procesos pendientes...")
         spinner.stop()
         boton.set_sensitive(True)
-
         control_mensajes_infor_C("Verificación finalizada.", "Todos los procesos han sido detenidos.")

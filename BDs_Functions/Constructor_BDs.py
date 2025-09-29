@@ -50,7 +50,7 @@ def crear_BDs_Constructor(bases_a_construir=None):
         "BD_ComTecl":     (BD_Comb_Teclas.__table__, sqlite_uri("BD_ComTecl.sqlite")),
         "BD_RecentArch":  (BD_Recient_Arch.__table__, sqlite_uri("BD_RecentArch.sqlite")),
         "BD_Informadora": (BDInformadora.__table__,  sqlite_uri("BD_Informadora.sqlite")),
-        "BD_Moduls":      (BD_Moduls.__table__, sqlite_uri("BD_Modulos.sqlite")),
+        "BD_Moduls":      (BD_Moduls.__table__, sqlite_uri("BD_Moduls.sqlite")),
     }
 
     # Si quieres conservar el equivalente a RUTA_PARA_BDs_SISTEMA (para logs, etc.)
