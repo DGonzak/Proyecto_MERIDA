@@ -24,7 +24,7 @@ import json
 import shutil
 
 from Lib_Extra.Rutas_Gestion import get_recursos_dir, get_data_dir
-from Lib_Extra.Funciones_extras import escribir_log
+from Lib_Extra.Funciones_extras import escribir_log,obtener_ruta_icono_Preder
 
 from BDs_Functions.Models_BD import BD_Moduls
 from BDs_Functions.BD_Moduls_Funct import BD_Moduls_Functions
@@ -391,6 +391,14 @@ class pantalla_modulos(Gtk.Window):
                             )
                     # ===== fin bloque dependencias =====
 
+                    #Creación de la carpeta individual del módulo
+                    self.control_mensajes_Textview_Regist_A(
+                        mensaje_label=None,
+                        mensaje_textview=f"[INFO] Creando carpeta individual para el módulo..."
+                    )
+                    ruta_carpeta_modulo_individual = os.path.join(carpeta_modulos, datos['id'])
+                    os.makedirs(ruta_carpeta_modulo_individual, exist_ok=True)
+
                     #Verificar que el archivo principal exista
                     archivo_principal = datos.get("Archivo_Principal")
                     if archivo_principal not in archivos_zip:
@@ -405,7 +413,7 @@ class pantalla_modulos(Gtk.Window):
                         mensaje_label=None,
                         mensaje_textview=f"[INFO] Copiando archivo principal {archivo_principal} a la carpeta de módulos...(se usará el id como nombre del archivo .py)"
                     )
-                    destino_py = os.path.join(carpeta_modulos, f"{datos['id']}.py")
+                    destino_py = os.path.join(ruta_carpeta_modulo_individual, f"{datos['id']}.py")
                     with archivo_zip.open(archivo_principal) as src, open(destino_py, "wb") as dst:
                         shutil.copyfileobj(src, dst)
 
@@ -414,19 +422,61 @@ class pantalla_modulos(Gtk.Window):
                         mensaje_textview=f"[OK] Archivo principal copiado a {destino_py} como {datos['id']}.py"
                     )
 
+                    # Verificar icono del módulo
+                    icono_arch = datos.get("icono")
+                    icono_ubicacion = None
+
+                    if not icono_arch or icono_arch not in archivos_zip:
+                        self.control_mensajes_Textview_Regist_A(
+                            mensaje_label="Falta de icono",
+                            mensaje_textview=f"[INFO] El módulo {datos.get('Nombre_del_Modulo','<sin nombre>')} no contiene un icono válido. Se usará el icono predeterminado."
+                        )
+                        icono_ubicacion = obtener_ruta_icono_Preder()
+
+                    else:
+                        # Carpeta destino de iconos
+                        destino_iconos = os.path.join(get_data_dir(), "Iconos_MERIDA")
+                        os.makedirs(destino_iconos, exist_ok=True)
+
+                        # Nombre final del icono basado en el id
+                        nombre_icono_final = f"{datos['id']}.svg"
+                        ruta_icono_final = os.path.join(destino_iconos, nombre_icono_final)
+
+                        self.control_mensajes_Textview_Regist_A(
+                            mensaje_label=None,
+                            mensaje_textview=f"[INFO] Copiando icono {icono_arch} a la carpeta de iconos de MERIDA..."
+                        )
+
+                        try:
+                            with archivo_zip.open(icono_arch) as src, open(ruta_icono_final, "wb") as dst:
+                                shutil.copyfileobj(src, dst)
+
+                            self.control_mensajes_Textview_Regist_A(
+                                mensaje_label=None,
+                                mensaje_textview=f"[OK] Icono copiado como {nombre_icono_final} en {destino_iconos}."
+                            )
+                            icono_ubicacion = ruta_icono_final
+
+                        except Exception as e:
+                            self.control_mensajes_Textview_Regist_A(
+                                mensaje_label="Error al copiar icono",
+                                mensaje_textview=f"[ERROR] No se pudo copiar el icono {icono_arch}. Se usará el predeterminado. Detalles: {e}"
+                            )
+                            icono_ubicacion = obtener_ruta_icono_Preder()
+
                     #Si hay recursos extra, extraerlos a carpeta específica
                     self.control_mensajes_Textview_Regist_A(
                         mensaje_label=None,
                         mensaje_textview=f"[INFO] Verificando y copiando recursos extra si existen..."
                     )
                     recursos_extras = datos.get("Recursos_extras")
-                    # Se considera "Ninguno" como ausencia de recursos (tal como en tu ejemplo)
+                    # Se considera "Ninguno" como ausencia de recursos
                     if recursos_extras and str(recursos_extras).strip().lower() != "ninguno":
                         self.control_mensajes_Textview_Regist_A(
                             mensaje_label=None,
                             mensaje_textview=f"[INFO] Recursos extra detectados. Copiando a carpeta específica..."
                         )
-                        carpeta_recursos = os.path.join(carpeta_modulos, datos['id'])
+                        carpeta_recursos = os.path.join(ruta_carpeta_modulo_individual, "recursos")
                         os.makedirs(carpeta_recursos, exist_ok=True)
 
                         for recurso in archivos_zip:
@@ -437,6 +487,28 @@ class pantalla_modulos(Gtk.Window):
                             mensaje_label=None,
                             mensaje_textview=f"[OK] Recursos extra copiados en {carpeta_recursos}."
                         )
+                    
+                    #Registrar módulo en la base de datos
+                    self.control_mensajes_Textview_Regist_A(
+                        mensaje_label=None,
+                        mensaje_textview=f"[INFO] Registrando módulo en la base de datos..."
+                    )
+
+                    if self.BD_Moduls_Functions.validar_unico("Identificador_Modulo", datos['id']) is None:
+                        Registro_nuevo = BD_Moduls()
+                        Registro_nuevo.Nombre_Modulo = datos.get('Nombre_del_Modulo', '<sin nombre>')
+                        Registro_nuevo.Identificador_Modulo = datos['id']
+                        Registro_nuevo.Version_Modulo = datos.get('version', '<sin versión>')
+                        Registro_nuevo.Autor_Modulo = datos.get('Autor_del_Modulo', '<sin autor>')
+                        Registro_nuevo.CorreoElectronico_Autor = datos.get('Correo_Electronico_del_Autor', '<sin correo>')
+                        Registro_nuevo.Descripcion_Modulo = datos.get('descripcion', '<sin descripción>')
+                        Registro_nuevo.Arch_Principal_Ejecucion = datos.get('Archivo_Principal', '<sin archivo>')
+                        Registro_nuevo.Arch_Icono_Ubicacion = icono_ubicacion
+                        Registro_nuevo.Recursos_Adicionales = datos.get('Recursos_extras', '<sin recursos>')
+                        Registro_nuevo.Dependencias_Especiales = datos.get('Dependencias', '<sin dependencias>')
+                        Registro_nuevo.Estado_Modulo = True
+                        Registro_nuevo.Ubicacion_Modulo = destino_py
+                        self.BD_Moduls_Functions.registrar_nuevas_listas(Registro_nuevo)
 
                     self.control_mensajes_Textview_Regist_A(
                         mensaje_label="Instalación completada con éxito",

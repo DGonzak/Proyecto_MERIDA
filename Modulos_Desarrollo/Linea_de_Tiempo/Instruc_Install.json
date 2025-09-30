@@ -6,7 +6,7 @@
   "Correo_Electronico_del_Autor": "dgonzak4@gmail.com",
   "descripcion": "Permite organizar eventos en una línea temporal.",
   "Archivo_Principal": "Linea_de_Tiempo_V1_Modulo.py",
-  "icono": "Icono_Linea_de_Tiempo.svg"
+  "icono": "Icono_Linea_de_Tiempo.svg",
   "Recursos_extras": "Ninguno", 
   "Dependencias": "Ninguna"
 }
