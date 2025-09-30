@@ -136,6 +136,10 @@ class BD_Moduls(Base):
 		String(100),
 		nullable=False)
 	
+	Arch_Icono_Ubicacion = Column(
+		String(200),
+		nullable=False)
+
 	Recursos_Adicionales = Column(
 		String(200),
 		nullable=True)
