@@ -195,7 +195,20 @@ class Splash(Gtk.Window):
             self.control_mensajes_infor_C(
                 None,
                 "[OK] Se ha detectado la carpeta de archivos temporales. Verificación exitosa.")
-
+        #-------------------------Carpeta de Iconos de MERIDA----------------------------
+        dir_Iconos = os.path.join(get_data_dir(), "Iconos_MERIDA")
+        self.control_mensajes_infor_C(
+            None, f"Verificando carpeta de iconos de MERIDA en {dir_Iconos}")
+        
+        if not os.path.exists(dir_Iconos):
+            self.control_mensajes_infor_C(
+                None,
+                "[INFO] No se ha detectado carpeta de iconos. Creando carpeta de iconos...")
+            os.makedirs(dir_Iconos, exist_ok=True)
+            self.control_mensajes_infor_C(None, "[OK] Creación exitosa de la carpeta de iconos.")
+        else:
+            self.control_mensajes_infor_C(
+                None, "[OK] Se ha detectado la carpeta de iconos. Verificación exitosa.")
         #-------------------------Carpeta Predeterminada de Guardado----------------------
         self.RUTA_PREDETERMINADA = os.path.join(user_documents_path(), "MERIDA")
         self.control_mensajes_infor_C(

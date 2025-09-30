@@ -26,11 +26,20 @@ import shutil
 from Lib_Extra.Rutas_Gestion import get_recursos_dir, get_data_dir
 from Lib_Extra.Funciones_extras import escribir_log
 
+from BDs_Functions.Models_BD import BD_Moduls
+from BDs_Functions.BD_Moduls_Funct import BD_Moduls_Functions
+
+
 class pantalla_modulos(Gtk.Window):
     def __init__(self):
         super().__init__(title="Gestión de Módulos y Complementos")
         self.set_default_size(1000, 800)
-    
+
+        #==================INSTANCIAS DE CLASES==================
+        self.BD_Moduls_Functions = BD_Moduls_Functions()
+
+
+
         #==================ORGANIZACIÓN Y CREACIÓN DE WIDGETS==================
         #---------------------Contenedores---------------------
         box_pr = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
@@ -250,7 +259,6 @@ class pantalla_modulos(Gtk.Window):
 
         #Verificar si es carpeta o archivo
         if os.path.isdir(ruta_modulo):
-            print(f"Se detectó carpeta: {ruta_modulo}")
             self.control_mensajes_Textview_Regist_A(
                 mensaje_label="Verificando ruta proporcionada...",
                 mensaje_textview= "[INFO] Se detectó carpeta. Buscando archivos .modmeri..."
@@ -294,6 +302,7 @@ class pantalla_modulos(Gtk.Window):
         )
         os.makedirs(carpeta_modulos, exist_ok=True)
 
+        # Procesar cada archivo válido
         for ruta in rutas_validas:
             self.control_mensajes_Textview_Regist_A(
                 mensaje_label="Instalando módulo...",
@@ -302,6 +311,7 @@ class pantalla_modulos(Gtk.Window):
             try:
                 with zipfile.ZipFile(ruta, 'r') as archivo_zip:
                     archivos_zip = archivo_zip.namelist()
+                    
                     #Verificar que exista el JSON de instrucciones
                     if "Instruc_Install.json" not in archivos_zip:
                         self.control_mensajes_Textview_Regist_A(
@@ -318,7 +328,6 @@ class pantalla_modulos(Gtk.Window):
                     with archivo_zip.open("Instruc_Install.json") as json_file:
                         datos = json.load(json_file)
 
-                    print(f"JSON cargado: {datos.get('Nombre_del_Modulo','<sin nombre>')} v{datos.get('version','?')}")
                     self.control_mensajes_Textview_Regist_A(
                         mensaje_label=None,
                         mensaje_textview=f"[OK] Instrucciones de instalación leídas para {datos.get('Nombre_del_Modulo','<sin nombre>')} v{datos.get('version','?')}."
