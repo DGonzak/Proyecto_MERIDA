@@ -5,7 +5,7 @@ gi.require_version("Gtk", "4.0")
 from gi.repository import Gtk, GLib, Gdk
 from datetime import datetime
 
-from Lib_Extra.Rutas_Gestion import get_config_dir, get_cache_dir, get_log_dir
+from Lib_Extra.Rutas_Gestion import get_config_dir, get_cache_dir, get_log_dir,get_recursos_dir
 
 #Ruta para la creación de la carpeta de archivos temporales
 CARPETA_ARCHIVOS_TMP_SUP = os.path.join(get_cache_dir(), "Archivos_Temporales")
@@ -184,6 +184,14 @@ def control_label_estado(label_SUP_Get, texto_1, segundos=5):
     # Ejecutar `restaurar_texto` después de X segundos (convertido a milisegundos)
     GLib.timeout_add(segundos * 1000, restaurar_texto)
 
+def obtener_ruta_icono_Preder():
+    """"
+    Devuelve la ruta absoluta del icono predeterminado si no el icono propio 
+    no existe o no se puede cargar. Debe ser llamado manualmente."""
+
+    ruta_Icono_Preder = os.path.join(get_recursos_dir(), "Imágenes", "Logo_MERIDA_Solo_Sin-Fondo_02.svg")
+    
+    return ruta_Icono_Preder
 # ============================================
 # Funciones referentes a: Archivos Temporales
 # ============================================
