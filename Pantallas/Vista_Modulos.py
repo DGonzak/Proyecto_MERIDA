@@ -22,6 +22,7 @@ import os
 import zipfile
 import json
 import shutil
+from packaging import version
 
 from Lib_Extra.Rutas_Gestion import get_recursos_dir, get_data_dir
 from Lib_Extra.Funciones_extras import escribir_log,obtener_ruta_icono_Preder
@@ -29,7 +30,7 @@ from Lib_Extra.Funciones_extras import escribir_log,obtener_ruta_icono_Preder
 from BDs_Functions.Models_BD import BD_Moduls
 from BDs_Functions.BD_Moduls_Funct import BD_Moduls_Functions
 
-
+from Recursos.__MERIDA_METADATOS__ import MERIDA_Metadata
 class pantalla_modulos(Gtk.Window):
     def __init__(self):
         super().__init__(title="Gestión de Módulos y Complementos")
@@ -37,7 +38,7 @@ class pantalla_modulos(Gtk.Window):
 
         #==================INSTANCIAS DE CLASES==================
         self.BD_Moduls_Functions = BD_Moduls_Functions()
-
+        self.MERIDA_METADATA = MERIDA_Metadata()
 
 
         #==================ORGANIZACIÓN Y CREACIÓN DE WIDGETS==================
@@ -241,7 +242,7 @@ class pantalla_modulos(Gtk.Window):
         except Exception:
             try:
                 # fallback a importlib_metadata si está instalado
-                from importlib.metadata import version as _pkg_version, PackageNotFoundError
+                from importlib_metadata import version as _pkg_version, PackageNotFoundError
                 _can_check_deps = True
             except Exception:
                 _pkg_version = None
@@ -332,8 +333,31 @@ class pantalla_modulos(Gtk.Window):
                         mensaje_label=None,
                         mensaje_textview=f"[OK] Instrucciones de instalación leídas para {datos.get('Nombre_del_Modulo','<sin nombre>')} v{datos.get('version','?')}."
                     )
+                    #======Validar Datos de MERIDA=======
+                    self.control_mensajes_Textview_Regist_A(
+                        mensaje_label="Revisando compatibiliades iniciales..."
+                        mensaje_textview="[INFO] Revisando compatibilidad de versión de MERIDA con versión del módulo..."
+                    )
+
+                    Version_Requerida_Merida = version.parse(datos.get("Version_Minima_MERIDA", "1.0.0"))
+                    Version_Actual_Merida = version.parse(self.MERIDA_METADATA.VERSION_DEL_PROGRAMA)
+
+                    if Version_Actual_Merida < Version_Requerida_Merida:
+                        self.control_mensajes_Textview_Regist_A(
+                            mensaje_label="Error de instalación de módulo",
+                            mensaje_textview=(
+                                f"[ERROR] El módulo {datos.get('Nombre_del_Modulo','<sin nombre>')} "
+                                f"requiere MERIDA v{Version_Requerida_Merida} o superior. "
+                                f"Su versión actual es v{Version_Actual_Merida}. Instalación cancelada."
+                            )
+                        )
+                        return
 
                     # ===== Verificación y mensajes sobre DEPENDENCIAS =====
+                    self.control_mensajes_Textview_Regist_A(
+                        mensaje_label=None,
+                        mensaje_textview="[INFO] Revisando dependencias de módulo..."
+                    )
                     deps_field = datos.get("Dependencias", None)
                     deps_list = []
 
@@ -510,10 +534,16 @@ class pantalla_modulos(Gtk.Window):
                         Registro_nuevo.Ubicacion_Modulo = destino_py
                         self.BD_Moduls_Functions.registrar_nuevas_listas(Registro_nuevo)
 
-                    self.control_mensajes_Textview_Regist_A(
-                        mensaje_label="Instalación completada con éxito",
-                        mensaje_textview=f"[OK] Instalación de {datos.get('Nombre_del_Modulo','<sin nombre>')} completada."
-                    )
+                        self.control_mensajes_Textview_Regist_A(
+                            mensaje_label="Instalación completada con éxito",
+                            mensaje_textview=f"[OK] Instalación de {datos.get('Nombre_del_Modulo','<sin nombre>')} completada."
+                        )
+
+                    else:
+                        self.control_mensajes_Textview_Regist_A(
+                            mensaje_label="Error de instalación de módulo",
+                            mensaje_textview=f"[ERROR] Ya existe un módulo con el ID {datos['id']} en la base de datos. Instalación cancelada para evitar duplicados."
+                        )
 
             except zipfile.BadZipFile:
                 self.control_mensajes_Textview_Regist_A(

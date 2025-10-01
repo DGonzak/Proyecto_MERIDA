@@ -2,6 +2,7 @@
   "Nombre_del_Modulo": "Línea de Tiempo",
   "id": "Linea_de_Tiempo",
   "version": "1.0.0",
+  "Version_Minima_MERIDA": "1.0.0",
   "Autor_del_Modulo": "DGonzak",
   "Correo_Electronico_del_Autor": "dgonzak4@gmail.com",
   "descripcion": "Permite organizar eventos en una línea temporal.",
