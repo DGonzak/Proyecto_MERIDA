@@ -335,7 +335,7 @@ class pantalla_modulos(Gtk.Window):
                     )
                     #======Validar Datos de MERIDA=======
                     self.control_mensajes_Textview_Regist_A(
-                        mensaje_label="Revisando compatibiliades iniciales..."
+                        mensaje_label="Revisando compatibiliades iniciales...",
                         mensaje_textview="[INFO] Revisando compatibilidad de versión de MERIDA con versión del módulo..."
                     )
 
