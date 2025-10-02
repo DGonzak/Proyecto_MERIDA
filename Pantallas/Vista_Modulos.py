@@ -66,12 +66,12 @@ class pantalla_modulos(Gtk.Window):
         self.FlowBox_Modulos.set_max_children_per_line(4)
         self.FlowBox_Modulos.set_selection_mode(Gtk.SelectionMode.NONE)
 
-        ruta_icono = "/home/dgonzak/DGonzak/DGonzak_Ada-Lovelace_LA/CPTD/Proyecto_MERIDA/Codigo_Fuente/Modulos_Desarrollo/Linea_de_Tiempo/Icono_Linea_de_Tiempo.svg"
-
-        icono1 = self.crear_entrada_modulo(icono_path=ruta_icono, nombre_modulo="Línea de Tiempo", version_modulo="v0.1.0")
+        dict_modulos_regist = self.BD_Moduls_Functions.obtener_datos_simples_Registros()
         
-        self.FlowBox_Modulos.append(icono1)
-               
+        if dict_modulos_regist:
+            for id_modulo, datos in dict_modulos_regist.items():
+                icono1 = self.crear_entrada_modulo(icono_path=datos["icono"], nombre_modulo=datos["nombre_modulo"], version_modulo=datos["version"])
+                self.FlowBox_Modulos.append(icono1)
 
         #Botones inferiores
         self.boton_instalar = Gtk.Button(label="Instalar módulo")
@@ -85,8 +85,11 @@ class pantalla_modulos(Gtk.Window):
         
         #-------------------Inserción a la ventana-------------------
         box_sup.append(self.Entry_Busqueda)
-        
-        box_cent.append(self.FlowBox_Modulos)
+
+        if dict_modulos_regist:
+            box_cent.append(self.FlowBox_Modulos)
+        else:
+            box_cent.append(self.Label_Sin_Modulos)
 
         box_infer.append(self.boton_instalar)
         box_pr.append(box_sup)
@@ -609,13 +612,25 @@ class pantalla_modulos(Gtk.Window):
         box_image.set_vexpand(True)
 
         #logo / icono
-        logo = Gtk.Picture.new_for_filename(icono_path)
+        if icono_path and os.path.exists(icono_path):
+            logo = Gtk.Picture.new_for_filename(icono_path)
+        else:
+            logo = Gtk.Picture.new_for_filename(obtener_ruta_icono_Preder())
+
         logo.set_content_fit(Gtk.ContentFit.CONTAIN)
         logo.set_size_request(64, 64)  # tamaño fijo recomendado
 
         # Nombre del módulo y Version (texto)
-        label_nombre = Gtk.Label(label=nombre_modulo)
-        label_version = Gtk.Label(label=version_modulo)
+        label_nombre = Gtk.Label()
+        label_nombre.set_markup(f"<b>{nombre_modulo}</b>")
+        label_nombre.set_xalign(0)
+
+        label_version = Gtk.Label(label=f"v{version_modulo}")
+        label_version.set_xalign(0)
+        label_version.add_css_class("dim-label")  # estilo grisado de GTK
+
+
+        btn_CR_Modulo.connect("clicked", self.mostrar_detalles_modulo, label_nombre.get_text())
 
         #Organización de widgets
         box_image.append(logo)
@@ -629,3 +644,9 @@ class pantalla_modulos(Gtk.Window):
         btn_CR_Modulo.set_child(box_most)
 
         return btn_CR_Modulo
+
+    def mostrar_detalles_modulo(self, widget=None, nombre_modulo_get=None):
+        """
+        Muestra una ventana con los detalles completos del módulo seleccionado.
+        """
+        print(f"Se mostrará los detalles del módulo: {nombre_modulo_get}")

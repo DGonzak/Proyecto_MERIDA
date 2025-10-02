@@ -31,7 +31,6 @@ class BD_Moduls_Functions():
             Sesion_Moduls.add(nueva_lista)
             Sesion_Moduls.commit()
 
-
     def obtener_registros(self, modo: str = "lista"):
         """
         Obtiene TODOS los registros de la "base de datos" almacenados en la 
@@ -86,7 +85,6 @@ class BD_Moduls_Functions():
 
         return lista_registros if modo == "lista" else dict_registros
 
-
     def eliminar_registros (self, id_get):
         """
         Elimina un registro específico de la base de datos, dada su ID.
@@ -127,6 +125,7 @@ class BD_Moduls_Functions():
         return registro_encontrado
 
     def reconstruir_base_de_datos_completa(self):
+
         """
         Cierra las conexiones activas, elimina el archivo físico,
         recrea la base de datos y repuebla los datos predeterminados.
@@ -145,3 +144,34 @@ class BD_Moduls_Functions():
             error_reconstr = e
 
         return estado_reconstr, error_reconstr
+
+    def obtener_datos_simples_Registros(self):
+        """
+        Obtiene datos simples de todos los registros almacenados en la base de datos.
+        Estos son: 
+            -Nombre
+            -Version
+            -Icono (la ruta del icono)
+        
+        Estos datos son usados para mostrar los módulos en la pantalla de gestión de módulos,
+        y además, para saber cuantos módulos hay en la base de datos.
+        """
+
+        diccionario_datos_simples = {}
+
+        with Session(self.conexion) as Sesion_Moduls:
+            registros_get = Sesion_Moduls.query(
+                Mbd.ID,
+                Mbd.Nombre_Modulo,
+                Mbd.Version_Modulo,
+                Mbd.Arch_Icono_Ubicacion
+            ).all()
+
+        for registro in registros_get:
+            diccionario_datos_simples[registro.ID] = {
+                "nombre_modulo": registro.Nombre_Modulo,
+                "version": registro.Version_Modulo,
+                "icono": registro.Arch_Icono_Ubicacion
+            }
+
+        return diccionario_datos_simples
