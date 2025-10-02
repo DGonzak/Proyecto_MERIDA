@@ -1,14 +1,36 @@
-¡Bienvenido al sistema de instalación de módulos/complementos de MERIDA!
+¡Bienvenido al sistema de instalación de módulos y complementos de MERIDA!
 
-Para instalar un nuevo módulo, tome en cuenta lo siguiente:
-    1. El sistema de instalación solo acepta paquetes .modmeri (Módulos de MERIDA).
-    2. El sistema de instalación permite la instalación de módulos en lote, es decir, puede instalar varios módulos a la vez.
-    3. Si desea instalar varios módulos a la vez, por favor seleccione la opción "Instalar desde carpeta" y siga las siguientes instrucciones:
-        -Seleccione una carpeta que contenga todos los archivo .modmeri que desee instalar
-        -Verifique la información presentada sobre dichos módulos
-        -Confirme dicha información. El sistema de encargará de instalar todos los módulos.
-    4. Si por el contrario, desea instalar un solo módulo de MERIDA, seleccione la opción: "Instalar desde archivo". El procedimiento es el mismo comparado con la instalación por lotes. Confirme los datos presentados y el programa comenzará con la instalación.
-    5. Tenga en cuenta que el sistema crea un log (registro) por cada instalación hecha de algún módulo y lo guarda en la ubicación predeterminada para este tema. Para más información al respecto, consulte el manual de usuario de MERIDA.
+El sistema de instalación de MERIDA le permite ampliar las funciones del programa mediante módulos.
 
-    Por ultimo, recuerda instalar módulos de fuentes confiables.
+Antes de instalar, tenga en cuenta lo siguiente:
 
+- Requisitos básicos
+
+    1. Solo se aceptan paquetes con extensión .modmeri (Módulos de MERIDA).
+
+    2. Cada paquete debe incluir un archivo Instruc_Install.json válido con la información del módulo.
+
+ADVERTENCIA: Si este archivo falta o contiene datos incompletos, la instalación será cancelada automáticamente.
+
+- Opciones de instalación
+
+    1. Instalar desde archivo:
+        Seleccione un único archivo .modmeri para instalar un solo módulo.
+
+    2. Instalar desde carpeta:
+        - Seleccione una carpeta que contenga uno o varios archivos .modmeri.
+        - El sistema instalará todos los módulos encontrados en esa carpeta (instalación por lotes).
+        - Solo se analizarán los archivos en el primer nivel de la carpeta (no se incluyen subcarpetas).
+
+- Registro de instalación
+
+    1. Por cada instalación realizada, el sistema genera un log (registro detallado del proceso).
+    2. Estos registros se guardan automáticamente en la carpeta predeterminada de MERIDA para logs.
+    3. Consulte el manual de usuario para conocer la ubicación exacta de estos logs.
+
+- Recomendaciones importantes
+
+    1. Instale únicamente módulos de fuentes confiables para evitar problemas de seguridad o compatibilidad.
+    2. Verifique siempre que los datos del módulo (nombre, autor, versión y dependencias) sean correctos.
+    3. Usted puede comprobar los archivos internos de un módulo con cualquier software que maneje archivos comprimidos (los archivo .modmeri son archivo comprimidos de tipo zip con extensión cambiada). Desconfie si se presenta un archivo .modmeri que no pueda abrir y revisar libremente.
+    4. Si su versión de MERIDA no cumple con la versión mínima requerida por el módulo, la instalación no podrá completarse.

@@ -227,10 +227,12 @@ class pantalla_modulos(Gtk.Window):
 
         # Import dinámico para verificar dependencias externas
         try:
+            #Se intenta, en primer lugar, con importlib.metadata (Python 3.8+)
             from importlib.metadata import version as _pkg_version, PackageNotFoundError
             _can_check_deps = True
         except Exception:
             try:
+                #Si falla, se intenta con importlib_metadata (backport para Python <3.8) si esta instalado.
                 from importlib_metadata import version as _pkg_version, PackageNotFoundError
                 _can_check_deps = True
             except Exception:
@@ -362,7 +364,11 @@ class pantalla_modulos(Gtk.Window):
                     recursos_path = self.instalar_recursos_extra(archivo_zip, datos, ruta_carpeta_modulo)
                     if recursos_path:
                         self.control_mensajes_Textview_Regist_A(None, f"[OK] Recursos extra copiados en {recursos_path}")
-
+                    else:
+                        self.control_mensajes_Textview_Regist_A(
+                            mensaje_label=None,
+                            mensaje_textview=f"[INFO] No se requieren recursos extras."
+                        )
                     # Registrar en la base de datos
                     self.control_mensajes_Textview_Regist_A(
                         mensaje_label=None,
