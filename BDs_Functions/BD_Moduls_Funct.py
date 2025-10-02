@@ -175,3 +175,34 @@ class BD_Moduls_Functions():
             }
 
         return diccionario_datos_simples
+    
+    def obtener_registro_ID(self, id_get):
+        """
+        Obtiene todos los registros de una entrada según el 
+        id proporcionado (id de la base de datos, no identificador de módulo)
+        """
+
+        with Session(self.conexion) as Sesion_Moduls:
+            
+            registro_get = Sesion_Moduls.query(Mbd).filter_by(ID=id_get).first()
+
+            if registro_get:
+
+                return {
+                    "nombre_modulo":registro_get.Nombre_Modulo,
+                    "identificador_modulo":registro_get.Identificador_Modulo,
+                    "version_modulo":registro_get.Version_Modulo,
+                    "autor_modulo":registro_get.Autor_Modulo,
+                    "correo_autor":registro_get.CorreoElectronico_Autor,
+                    "descripcion_modulo":registro_get.Descripcion_Modulo,
+                    "arch_principal_ejecucion":registro_get.Arch_Principal_Ejecucion,
+                    "arch_icono_ubi":registro_get.Arch_Icono_Ubicacion,
+                    "recursos_adicionales":registro_get.Recursos_Adicionales,
+                    "dependencias_especiales":registro_get.Dependencias_Especiales,
+                    "estado_modulo":registro_get.Estado_Modulo,
+                    "fecha_instalacion":registro_get.Fecha_Instalacion,
+                    "ubicacion_modulo":registro_get.Ubicacion_Modulo
+                }
+            else:
+                return None
+

@@ -23,6 +23,7 @@ import zipfile
 import json
 import shutil
 from packaging import version
+from datetime import datetime
 
 from Lib_Extra.Rutas_Gestion import get_recursos_dir, get_data_dir
 from Lib_Extra.Funciones_extras import escribir_log,obtener_ruta_icono_Preder
@@ -70,7 +71,12 @@ class pantalla_modulos(Gtk.Window):
         
         if dict_modulos_regist:
             for id_modulo, datos in dict_modulos_regist.items():
-                icono1 = self.crear_entrada_modulo(icono_path=datos["icono"], nombre_modulo=datos["nombre_modulo"], version_modulo=datos["version"])
+                icono1 = self.crear_entrada_modulo(
+                    icono_path=datos["icono"],
+                    nombre_modulo=datos["nombre_modulo"],
+                    version_modulo=datos["version"],
+                    id_modulo = id_modulo)
+                
                 self.FlowBox_Modulos.append(icono1)
 
         #Botones inferiores
@@ -588,15 +594,17 @@ class pantalla_modulos(Gtk.Window):
         self.BD_Moduls_Functions.registrar_nuevas_listas(Registro_nuevo)
         return True
  
-    def crear_entrada_modulo(self, icono_path, nombre_modulo, version_modulo):
+    def crear_entrada_modulo(self, icono_path, nombre_modulo, version_modulo, id_modulo):
         """
         Crea un widget "visual" para representar un módulo instalado.
         Se compone de :
             1. Icono del módulo
             2. Nombre del módulo
             3. Versión del módulo
-
+    
         El widget, al ser presionado, mostrará más detalles del módulo en una ventana aparte.
+        Para mostrar dicha ventana, se usa como argumento el id_modulo, para realizar consultas
+        a la base de datos.
         """
 
         btn_CR_Modulo = Gtk.Button()
@@ -630,7 +638,7 @@ class pantalla_modulos(Gtk.Window):
         label_version.add_css_class("dim-label")  # estilo grisado de GTK
 
 
-        btn_CR_Modulo.connect("clicked", self.mostrar_detalles_modulo, label_nombre.get_text())
+        btn_CR_Modulo.connect("clicked", self.mostrar_detalles_modulo, id_modulo)
 
         #Organización de widgets
         box_image.append(logo)
@@ -645,8 +653,147 @@ class pantalla_modulos(Gtk.Window):
 
         return btn_CR_Modulo
 
-    def mostrar_detalles_modulo(self, widget=None, nombre_modulo_get=None):
+    def mostrar_detalles_modulo(self, widget=None, id_modulo=None):
         """
         Muestra una ventana con los detalles completos del módulo seleccionado.
         """
-        print(f"Se mostrará los detalles del módulo: {nombre_modulo_get}")
+        datos_modulo = self.BD_Moduls_Functions.obtener_registro_ID(id_modulo)
+        
+        Vent_ModulInfor = Gtk.Dialog(
+            title="Detalles del Módulo MERIDA",
+            transient_for=self.get_root(),
+            modal=True,
+        )
+        Vent_ModulInfor.set_default_size(1000, 400)
+        
+        #=======Contenedores================
+        content_area = Vent_ModulInfor.get_content_area()
+
+        grid = Gtk.Grid()
+        grid.set_column_spacing(10)
+        grid.set_row_spacing(6)
+
+        box_pr = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=20)
+
+        vbox_grid = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=5)
+        vbox_btn = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=5)
+
+
+        #==========Extras===================
+        fecha_cruda = datos_modulo.get("fecha_instalacion")
+        if fecha_cruda:
+            try:
+                fecha_obj = datetime.fromisoformat(str(fecha_cruda))
+                fecha_transformada = fecha_obj.strftime("%d-%m-%Y (Hora: %Hh:%Mm:%Ss)")
+            except Exception:
+                fecha_transformada = "Fecha inválida"
+        else:
+            fecha_transformada = "Sin datos"
+
+        # Transformar estado booleano
+        estado_bool = datos_modulo.get("estado", False)
+        estado_transformado = "Instalado" if estado_bool else "Desconocido"
+
+        def configurar_entry():
+            return {
+                "hexpand": True,
+                "editable": False,
+                "focusable": False
+            }
+
+
+        #======Widget======
+        #Etiquetas
+        label_nombre = Gtk.Label(label="Nombre del Módulo:", xalign=1.0)
+        label_identificador = Gtk.Label(label="Identificador del Módulo:", xalign=1.0)
+        label_version = Gtk.Label(label="Versión del Módulo:", xalign=1.0)
+        label_autor = Gtk.Label(label="Autor del Módulo:", xalign=1.0)
+        label_correoAutor = Gtk.Label(label="Correo electrónico del autor:", xalign=1.0)
+        label_descripcion = Gtk.Label(label="Descripción del Módulo:", xalign=1.0)
+        label_archPrincipal = Gtk.Label(label="Archivo Principal de Ejecución:", xalign=1.0)
+        label_archIconoUbi = Gtk.Label(label="Ubicación del Icono del Módulo:", xalign=1.0)
+        label_RecursAdic = Gtk.Label(label="Recursos Adicionales del Módulo:", xalign=1.0)
+        label_DepenEspec = Gtk.Label(label="Dependencias Especiales del Módulo:", xalign=1.0)
+        label_EstadoModul = Gtk.Label(label="Estado del Módulo:", xalign=1.0)
+        label_fechaInstall = Gtk.Label(label="Fecha de Instalación:", xalign=1.0)
+        label_ubiModulo = Gtk.Label(label="Ubicación del Módulo:", xalign=1.0)
+
+        #Entrys
+        Entry_nombre = Gtk.Entry(**configurar_entry())
+        Entry_nombre.set_text(datos_modulo.get("nombre_modulo", "<sin-nombre>"))
+
+        Entry_identificador = Gtk.Entry(**configurar_entry())
+        Entry_identificador.set_text(datos_modulo.get("identificador_modulo", "<sin-identificador>"))
+
+        Entry_version = Gtk.Entry(**configurar_entry())
+        Entry_version.set_text(datos_modulo.get("version_modulo", "<sin-version>"))
+
+        Entry_autor = Gtk.Entry(**configurar_entry())
+        Entry_autor.set_text(datos_modulo.get("autor_modulo", "<sin-autor>"))
+
+        Entry_correoAutor = Gtk.Entry(**configurar_entry())
+        Entry_correoAutor.set_text(datos_modulo.get("correo_autor", "<sin-correo>"))
+
+        TextView_Descripcion = Gtk.TextView(hexpand=True, vexpand=True)
+        TextView_Descripcion.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)
+        TextView_Descripcion.set_editable(False)
+        TextView_Descripcion.set_focusable(False)
+        TextView_Descripcion.get_buffer().set_text(datos_modulo.get("descripcion_modulo", "<sin-descripcion>"))
+
+        Entry_ArchPrincipal = Gtk.Entry(**configurar_entry())
+        Entry_ArchPrincipal.set_text(datos_modulo.get("arch_principal_ejecucion", "<sin-ArchPrincipal>"))
+
+        Entry_ArchIconoUbi = Gtk.Entry(**configurar_entry())
+        Entry_ArchIconoUbi.set_text(datos_modulo.get("arch_icono_ubi", "<sin-archiconoubi>"))
+
+        Entry_RecursAdic = Gtk.Entry(**configurar_entry())
+        Entry_RecursAdic.set_text(datos_modulo.get("recursos_adicionales", "<sin-datos>"))
+
+        Entry_DepenEspec = Gtk.Entry(**configurar_entry())
+        Entry_DepenEspec.set_text(datos_modulo.get("dependencias_especiales", "<sin-datos>"))
+
+        Entry_EstadoModul = Gtk.Entry(**configurar_entry())
+        Entry_EstadoModul.set_text(estado_transformado)
+
+        Entry_FechaInstall = Gtk.Entry(**configurar_entry())
+        Entry_FechaInstall.set_text(fecha_transformada)
+
+        Entry_UbiModulo = Gtk.Entry(**configurar_entry())
+        Entry_UbiModulo.set_text(datos_modulo.get("ubicacion_modulo", "<sin-datos>"))
+        
+        #Botones
+        btn_desinstalarModul = Gtk.Button(label="Desinstalar Módulo")
+
+
+
+        #=======Posicionamiento de Wigets===========
+        Para_Pos = [
+            (label_nombre, Entry_nombre),
+            (label_identificador, Entry_identificador),
+            (label_version, Entry_version),
+            (label_autor, Entry_autor),
+            (label_correoAutor, Entry_correoAutor),
+            (label_descripcion, TextView_Descripcion),
+            (label_archPrincipal, Entry_ArchPrincipal),
+            (label_archIconoUbi, Entry_ArchIconoUbi),
+            (label_RecursAdic, Entry_RecursAdic),
+            (label_EstadoModul, Entry_EstadoModul),
+            (label_DepenEspec, Entry_DepenEspec),
+            (label_fechaInstall, Entry_FechaInstall),
+            (label_ubiModulo, Entry_UbiModulo)
+        ]
+
+        for i, (etiqueta, contenido) in enumerate(Para_Pos):
+            grid.attach(etiqueta, 0, i, 1, 1) #col, fila, with, height
+            grid.attach(contenido, 1, i, 1, 1) #col1, fila i, ocupa 1x1
+
+
+        vbox_btn.append(btn_desinstalarModul)
+
+        vbox_grid.append(grid)
+
+        box_pr.append(vbox_grid)
+        box_pr.append(vbox_btn)
+
+        content_area.append(box_pr)
+        Vent_ModulInfor.show()
