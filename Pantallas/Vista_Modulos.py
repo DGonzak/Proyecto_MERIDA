@@ -221,27 +221,16 @@ class pantalla_modulos(Gtk.Window):
     def Instalar_Modulo_Accion(self, ruta_modulo=None):
         """
         Realiza la instalación de módulos desde la ruta proporcionada.
-        1. Verifica si la ruta es carpeta o archivo.
-            - Si es carpeta: busca todos los archivos con extensión .modmeri y los añade a la lista.
-            - Si es archivo: lo añade directamente a la lista si es .modmeri.
-        2. Para cada archivo válido, revisa que:
-            - El ZIP contenga 'Instruc_Install.json' y un archivo .py principal.
-            - Los datos del JSON sean compatibles (nombre, id, versión).
-        3. Copia el .py y recursos extra a la carpeta ~/.local/share/MERIDA/modulos/
-        Además:
-        - Muestra mensajes de registro en self.control_mensajes_Textview_Regist_A
-        - Verifica dependencias indicadas en Instruc_Install.json y las informa
         """
-        #Limpieza del textview
+        # Limpieza del textview de registro
         self.textview_regist.get_buffer().set_text("")
 
-        # Intento de importar importlib.metadata para revisar versiones instaladas
+        # Import dinámico para verificar dependencias externas
         try:
             from importlib.metadata import version as _pkg_version, PackageNotFoundError
             _can_check_deps = True
         except Exception:
             try:
-                # fallback a importlib_metadata si está instalado
                 from importlib_metadata import version as _pkg_version, PackageNotFoundError
                 _can_check_deps = True
             except Exception:
@@ -249,45 +238,17 @@ class pantalla_modulos(Gtk.Window):
                 PackageNotFoundError = None
                 _can_check_deps = False
 
+        # Validar ruta proporcionada
         if not ruta_modulo:
             self.control_mensajes_Textview_Regist_A(
-                mensaje_label= "Error de instalación de módulo",
+                mensaje_label="Error de instalación de módulo",
                 mensaje_textview="[ERROR] No se proporcionó ninguna ruta. Instalación cancelada."
             )
             return
 
-        rutas_validas = []
-
-        #Verificar si es carpeta o archivo
-        if os.path.isdir(ruta_modulo):
-            self.control_mensajes_Textview_Regist_A(
-                mensaje_label="Verificando ruta proporcionada...",
-                mensaje_textview= "[INFO] Se detectó carpeta. Buscando archivos .modmeri..."
-            )
-
-            for archivo in os.listdir(ruta_modulo):
-                if archivo.endswith(".modmeri"):
-                    self.control_mensajes_Textview_Regist_A(
-                        mensaje_label=None,
-                        mensaje_textview= f"[OK] Se encontró archivo: {archivo}..."
-                    )
-                    rutas_validas.append(os.path.join(ruta_modulo, archivo))
-
-        elif os.path.isfile(ruta_modulo) and ruta_modulo.endswith(".modmeri"):
-            self.control_mensajes_Textview_Regist_A(
-                mensaje_label="Verificando ruta proporcionada...",
-                mensaje_textview= f"[OK] Se detectó archivo .modmeri en {ruta_modulo}"
-            )
-
-            rutas_validas.append(ruta_modulo)
-
-        else:
-            self.control_mensajes_Textview_Regist_A(
-                mensaje_label="Error de instalación de módulo",
-                mensaje_textview="[ERROR] La ruta proporcionada no es válida o no contiene archivos .modmeri. Instalación cancelada."
-            )
-            return
-
+        # Buscar rutas válidas (.modmeri)
+        rutas_validas = self.descubrir_rutas_modmeri(ruta_modulo)
+        
         if not rutas_validas:
             self.control_mensajes_Textview_Regist_A(
                 mensaje_label="Error de instalación de módulo",
@@ -295,12 +256,8 @@ class pantalla_modulos(Gtk.Window):
             )
             return
 
-        # Carpeta de instalación de módulos (si no existe, la crea)
+        # Carpeta de instalación de módulos
         carpeta_modulos = os.path.join(get_data_dir(), "modulos")
-        self.control_mensajes_Textview_Regist_A(
-            mensaje_label="Verificando carpeta de módulos...",
-            mensaje_textview=f"[INFO] Verificando la existencia de la carpeta de módulos en {carpeta_modulos}..."
-        )
         os.makedirs(carpeta_modulos, exist_ok=True)
 
         # Procesar cada archivo válido
@@ -312,8 +269,8 @@ class pantalla_modulos(Gtk.Window):
             try:
                 with zipfile.ZipFile(ruta, 'r') as archivo_zip:
                     archivos_zip = archivo_zip.namelist()
-                    
-                    #Verificar que exista el JSON de instrucciones
+
+                    # Verificar JSON de instalación
                     if "Instruc_Install.json" not in archivos_zip:
                         self.control_mensajes_Textview_Regist_A(
                             mensaje_label="Error de instalación de módulo",
@@ -321,243 +278,293 @@ class pantalla_modulos(Gtk.Window):
                         )
                         return
 
-                    # Leer y analizar el JSON
-                    self.control_mensajes_Textview_Regist_A(
-                        mensaje_label=None,
-                        mensaje_textview=f"[INFO] Leyendo instrucciones de instalación desde Instruc_Install.json..."
-                    )
-                    with archivo_zip.open("Instruc_Install.json") as json_file:
-                        datos = json.load(json_file)
+                    # Leer JSON
+                    datos = json.load(archivo_zip.open("Instruc_Install.json"))
 
-                    self.control_mensajes_Textview_Regist_A(
-                        mensaje_label=None,
-                        mensaje_textview=f"[OK] Instrucciones de instalación leídas para {datos.get('Nombre_del_Modulo','<sin nombre>')} v{datos.get('version','?')}."
-                    )
-                    #======Validar Datos de MERIDA=======
-                    self.control_mensajes_Textview_Regist_A(
-                        mensaje_label="Revisando compatibiliades iniciales...",
-                        mensaje_textview="[INFO] Revisando compatibilidad de versión de MERIDA con versión del módulo..."
-                    )
+                    if not self.validar_datos_json(datos):
+                        self.control_mensajes_Textview_Regist_A(
+                            mensaje_label="Error de instalación de módulo",
+                            mensaje_textview=f"[ERROR] El JSON de {ruta} no contiene los campos requeridos. Instalación cancelada."
+                        )
+                        return
 
-                    Version_Requerida_Merida = version.parse(datos.get("Version_Minima_MERIDA", "1.0.0"))
-                    Version_Actual_Merida = version.parse(self.MERIDA_METADATA.VERSION_DEL_PROGRAMA)
-
-                    if Version_Actual_Merida < Version_Requerida_Merida:
+                    # Validar versión de MERIDA
+                    self.control_mensajes_Textview_Regist_A(
+                        mensaje_label="Verificando compatibilidad",
+                        mensaje_textview="[INFO] Verificando versión mínima requerida de MERIDA..."
+                    )
+                    if not self.verificar_version_merida(datos, version.parse(self.MERIDA_METADATA.VERSION_DEL_PROGRAMA)):
                         self.control_mensajes_Textview_Regist_A(
                             mensaje_label="Error de instalación de módulo",
                             mensaje_textview=(
                                 f"[ERROR] El módulo {datos.get('Nombre_del_Modulo','<sin nombre>')} "
-                                f"requiere MERIDA v{Version_Requerida_Merida} o superior. "
-                                f"Su versión actual es v{Version_Actual_Merida}. Instalación cancelada."
+                                f"requiere MERIDA >= {datos.get('Version_Minima_MERIDA','1.0.0')}. "
+                                f"Su versión actual es {self.MERIDA_METADATA.VERSION_DEL_PROGRAMA}. Instalación cancelada."
                             )
                         )
                         return
 
-                    # ===== Verificación y mensajes sobre DEPENDENCIAS =====
+                    # Revisar dependencias
                     self.control_mensajes_Textview_Regist_A(
                         mensaje_label=None,
-                        mensaje_textview="[INFO] Revisando dependencias de módulo..."
+                        mensaje_textview="[INFO] Verificando dependencias del módulo..."
                     )
-                    deps_field = datos.get("Dependencias", None)
-                    deps_list = []
-
-                    # Normalizar dependencias a lista (acepta lista o string separado por comas)
-                    if deps_field:
-                        if isinstance(deps_field, list):
-                            deps_list = [str(d).strip() for d in deps_field if str(d).strip()]
-                        elif isinstance(deps_field, str):
-                            if deps_field.strip().lower() not in ("ninguno", "none", ""):
-                                # dividir por comas si es string
-                                deps_list = [d.strip() for d in deps_field.split(",") if d.strip()]
-
-                    if deps_list:
-                        # Mensaje de sugerencia general
-                        self.control_mensajes_Textview_Regist_A(
-                            mensaje_label=None,
-                            mensaje_textview=f"[SUGERENCIA] Detectado dependencias requeridas para el módulo {datos.get('Nombre_del_Modulo','<sin nombre>')}. Se recomienda verificar su existencia e instalarlos si no existen en su sistema."
-                        )
-
-                        # Mensaje que lista las dependencias tal como se especificaron
-                        deps_formatted = ", ".join(deps_list)
-                        self.control_mensajes_Textview_Regist_A(
-                            mensaje_label=None,
-                            mensaje_textview=f"[DEPENDENCIAS] Detectado las siguientes dependencias: {deps_formatted}"
-                        )
-
-                        # Intentar verificar si están instaladas y mostrar estado individual
-                        if _can_check_deps and _pkg_version is not None:
-                            for dep in deps_list:
-                                # Extraer nombre base antes de cualquier operador (==,>=,<=,>,<)
-                                import re
-                                m = re.split(r"(==|>=|<=|>|<)", dep, maxsplit=1)
-                                pkg_name = m[0].strip()
-                                try:
-                                    installed_ver = _pkg_version(pkg_name)
-                                    self.control_mensajes_Textview_Regist_A(
-                                        mensaje_label=None,
-                                        mensaje_textview=f"[DEPENDENCIA] {pkg_name} — INSTALADO (versión: {installed_ver})"
-                                    )
-                                except PackageNotFoundError:
-                                    self.control_mensajes_Textview_Regist_A(
-                                        mensaje_label=None,
-                                        mensaje_textview=f"[DEPENDENCIA] {pkg_name} — NO INSTALADO"
-                                    )
-                                except Exception as e_chk:
-                                    self.control_mensajes_Textview_Regist_A(
-                                        mensaje_label=None,
-                                        mensaje_textview=f"[DEPENDENCIA] {pkg_name} — Estado desconocido. Error al comprobar: {e_chk}"
-                                    )
+                    deps_resultados = self.verificar_dependencias(datos, _can_check_deps, _pkg_version, PackageNotFoundError)
+                    for dep, estado, info in deps_resultados:
+                        if estado == "INSTALADO":
+                            self.control_mensajes_Textview_Regist_A(None, f"[DEPENDENCIA] {dep} — INSTALADO (v{info})")
+                        elif estado == "NO INSTALADO":
+                            self.control_mensajes_Textview_Regist_A(None, f"[DEPENDENCIA] {dep} — NO INSTALADO")
                         else:
-                            # No se puede comprobar programáticamente (informar)
-                            self.control_mensajes_Textview_Regist_A(
-                                mensaje_label=None,
-                                mensaje_textview=f"[INFO] No fue posible comprobar automáticamente las dependencias en este entorno (importlib.metadata no disponible). Verifique manualmente: {deps_formatted}"
-                            )
-                    # ===== fin bloque dependencias =====
+                            self.control_mensajes_Textview_Regist_A(None, f"[DEPENDENCIA] {dep} — DESCONOCIDO ({info})")
 
-                    #Creación de la carpeta individual del módulo
+                    # Crear carpeta del módulo
                     self.control_mensajes_Textview_Regist_A(
-                        mensaje_label=None,
-                        mensaje_textview=f"[INFO] Creando carpeta individual para el módulo..."
+                        mensaje_label="Procesando instalación de módulo",
+                        mensaje_textview=f"[INFO] Creando carpeta para el módulo {datos['id']}..."
                     )
-                    ruta_carpeta_modulo_individual = os.path.join(carpeta_modulos, datos['id'])
-                    os.makedirs(ruta_carpeta_modulo_individual, exist_ok=True)
+                    ruta_carpeta_modulo = os.path.join(carpeta_modulos, datos['id'])
+                    os.makedirs(ruta_carpeta_modulo, exist_ok=True)
 
-                    #Verificar que el archivo principal exista
-                    archivo_principal = datos.get("Archivo_Principal")
-                    if archivo_principal not in archivos_zip:
+                    # Instalar archivo principal
+                    self.control_mensajes_Textview_Regist_A(    
+                        mensaje_label=None,
+                        mensaje_textview=f"[INFO] Instalando archivo principal {datos['Archivo_Principal']} en {ruta_carpeta_modulo}..."
+                    )
+                    destino_py = self.instalar_archivo_principal(archivo_zip, datos, ruta_carpeta_modulo)
+                    if not destino_py:
                         self.control_mensajes_Textview_Regist_A(
-                            mensaje_label="Error de instalación de módulo",
-                            mensaje_textview=f"[ERROR] El módulo {datos.get('Nombre_del_Modulo','<sin nombre>')} no contiene el archivo principal {archivo_principal}. Instalación cancelada."
+                            mensaje_label="Error",
+                            mensaje_textview=f"[ERROR] El módulo {datos['id']} no tiene archivo principal válido. Instalación cancelada."
                         )
                         return
-
-                    #Copiar archivo principal a carpeta de módulos
                     self.control_mensajes_Textview_Regist_A(
                         mensaje_label=None,
-                        mensaje_textview=f"[INFO] Copiando archivo principal {archivo_principal} a la carpeta de módulos...(se usará el id como nombre del archivo .py)"
+                        mensaje_textview=f"[OK] Archivo principal instalado en {destino_py}."
                     )
-                    destino_py = os.path.join(ruta_carpeta_modulo_individual, f"{datos['id']}.py")
-                    with archivo_zip.open(archivo_principal) as src, open(destino_py, "wb") as dst:
-                        shutil.copyfileobj(src, dst)
-
+                    # Instalar icono
                     self.control_mensajes_Textview_Regist_A(
                         mensaje_label=None,
-                        mensaje_textview=f"[OK] Archivo principal copiado a {destino_py} como {datos['id']}.py"
+                        mensaje_textview=f"[INFO] Instalando icono del módulo..."
                     )
-
-                    # Verificar icono del módulo
-                    icono_arch = datos.get("icono")
-                    icono_ubicacion = None
-
-                    if not icono_arch or icono_arch not in archivos_zip:
-                        self.control_mensajes_Textview_Regist_A(
-                            mensaje_label="Falta de icono",
-                            mensaje_textview=f"[INFO] El módulo {datos.get('Nombre_del_Modulo','<sin nombre>')} no contiene un icono válido. Se usará el icono predeterminado."
-                        )
-                        icono_ubicacion = obtener_ruta_icono_Preder()
-
-                    else:
-                        # Carpeta destino de iconos
-                        destino_iconos = os.path.join(get_data_dir(), "Iconos_MERIDA")
-                        os.makedirs(destino_iconos, exist_ok=True)
-
-                        # Nombre final del icono basado en el id
-                        nombre_icono_final = f"{datos['id']}.svg"
-                        ruta_icono_final = os.path.join(destino_iconos, nombre_icono_final)
-
-                        self.control_mensajes_Textview_Regist_A(
-                            mensaje_label=None,
-                            mensaje_textview=f"[INFO] Copiando icono {icono_arch} a la carpeta de iconos de MERIDA..."
-                        )
-
-                        try:
-                            with archivo_zip.open(icono_arch) as src, open(ruta_icono_final, "wb") as dst:
-                                shutil.copyfileobj(src, dst)
-
-                            self.control_mensajes_Textview_Regist_A(
-                                mensaje_label=None,
-                                mensaje_textview=f"[OK] Icono copiado como {nombre_icono_final} en {destino_iconos}."
-                            )
-                            icono_ubicacion = ruta_icono_final
-
-                        except Exception as e:
-                            self.control_mensajes_Textview_Regist_A(
-                                mensaje_label="Error al copiar icono",
-                                mensaje_textview=f"[ERROR] No se pudo copiar el icono {icono_arch}. Se usará el predeterminado. Detalles: {e}"
-                            )
-                            icono_ubicacion = obtener_ruta_icono_Preder()
-
-                    #Si hay recursos extra, extraerlos a carpeta específica
+                    destino_iconos = os.path.join(get_data_dir(), "Iconos_MERIDA")
+                    icono_ubicacion = self.instalar_icono(archivo_zip, datos, destino_iconos)
                     self.control_mensajes_Textview_Regist_A(
                         mensaje_label=None,
-                        mensaje_textview=f"[INFO] Verificando y copiando recursos extra si existen..."
+                        mensaje_textview=f"[OK] Icono instalado en {icono_ubicacion}."
                     )
-                    recursos_extras = datos.get("Recursos_extras")
-                    # Se considera "Ninguno" como ausencia de recursos
-                    if recursos_extras and str(recursos_extras).strip().lower() != "ninguno":
-                        self.control_mensajes_Textview_Regist_A(
-                            mensaje_label=None,
-                            mensaje_textview=f"[INFO] Recursos extra detectados. Copiando a carpeta específica..."
-                        )
-                        carpeta_recursos = os.path.join(ruta_carpeta_modulo_individual, "recursos")
-                        os.makedirs(carpeta_recursos, exist_ok=True)
 
-                        for recurso in archivos_zip:
-                            # Se asume que los recursos van dentro de una carpeta 'recursos/' dentro del ZIP
-                            if recurso.startswith("recursos/"):
-                                archivo_zip.extract(recurso, carpeta_recursos)
-                        self.control_mensajes_Textview_Regist_A(
-                            mensaje_label=None,
-                            mensaje_textview=f"[OK] Recursos extra copiados en {carpeta_recursos}."
-                        )
-                    
-                    #Registrar módulo en la base de datos
+                    # Instalar recursos extra
+                    self.control_mensajes_Textview_Regist_A(
+                        mensaje_label=None,
+                        mensaje_textview=f"[INFO] Instalando recursos extras del módulo..."
+                    )
+                    recursos_path = self.instalar_recursos_extra(archivo_zip, datos, ruta_carpeta_modulo)
+                    if recursos_path:
+                        self.control_mensajes_Textview_Regist_A(None, f"[OK] Recursos extra copiados en {recursos_path}")
+
+                    # Registrar en la base de datos
                     self.control_mensajes_Textview_Regist_A(
                         mensaje_label=None,
                         mensaje_textview=f"[INFO] Registrando módulo en la base de datos..."
                     )
-
-                    if self.BD_Moduls_Functions.validar_unico("Identificador_Modulo", datos['id']) is None:
-                        Registro_nuevo = BD_Moduls()
-                        Registro_nuevo.Nombre_Modulo = datos.get('Nombre_del_Modulo', '<sin nombre>')
-                        Registro_nuevo.Identificador_Modulo = datos['id']
-                        Registro_nuevo.Version_Modulo = datos.get('version', '<sin versión>')
-                        Registro_nuevo.Autor_Modulo = datos.get('Autor_del_Modulo', '<sin autor>')
-                        Registro_nuevo.CorreoElectronico_Autor = datos.get('Correo_Electronico_del_Autor', '<sin correo>')
-                        Registro_nuevo.Descripcion_Modulo = datos.get('descripcion', '<sin descripción>')
-                        Registro_nuevo.Arch_Principal_Ejecucion = datos.get('Archivo_Principal', '<sin archivo>')
-                        Registro_nuevo.Arch_Icono_Ubicacion = icono_ubicacion
-                        Registro_nuevo.Recursos_Adicionales = datos.get('Recursos_extras', '<sin recursos>')
-                        Registro_nuevo.Dependencias_Especiales = datos.get('Dependencias', '<sin dependencias>')
-                        Registro_nuevo.Estado_Modulo = True
-                        Registro_nuevo.Ubicacion_Modulo = destino_py
-                        self.BD_Moduls_Functions.registrar_nuevas_listas(Registro_nuevo)
-
+                    ok_registro = self.registrar_modulo(datos, destino_py, icono_ubicacion)
+                    if not ok_registro:
                         self.control_mensajes_Textview_Regist_A(
-                            mensaje_label="Instalación completada con éxito",
-                            mensaje_textview=f"[OK] Instalación de {datos.get('Nombre_del_Modulo','<sin nombre>')} completada."
+                            mensaje_label="Error de instalación",
+                            mensaje_textview=f"[ERROR] Ya existe un módulo con el ID {datos['id']} en la base de datos. Instalación cancelada."
                         )
+                        return
 
-                    else:
-                        self.control_mensajes_Textview_Regist_A(
-                            mensaje_label="Error de instalación de módulo",
-                            mensaje_textview=f"[ERROR] Ya existe un módulo con el ID {datos['id']} en la base de datos. Instalación cancelada para evitar duplicados."
-                        )
+                    # Instalación completada
+                    self.control_mensajes_Textview_Regist_A(
+                        mensaje_label="Instalación completada",
+                        mensaje_textview=f"[OK] Instalación de {datos.get('Nombre_del_Modulo','<sin nombre>')} finalizada."
+                    )
 
             except zipfile.BadZipFile:
                 self.control_mensajes_Textview_Regist_A(
-                    mensaje_label="Error de instalación de módulo",
-                    mensaje_textview=f"[ERROR] El archivo {ruta} no es un ZIP válido. Instalación cancelada."
+                    mensaje_label="Error",
+                    mensaje_textview=f"[ERROR] El archivo {ruta} no es un ZIP válido."
                 )
             except json.JSONDecodeError:
                 self.control_mensajes_Textview_Regist_A(
-                    mensaje_label="Error de instalación de módulo",
-                    mensaje_textview=f"[ERROR] El archivo Instruc_Install.json en {ruta} no es un JSON válido. Instalación cancelada."
+                    mensaje_label="Error",
+                    mensaje_textview=f"[ERROR] El archivo Instruc_Install.json en {ruta} no es válido (JSON mal formado)."
                 )
             except Exception as e:
                 self.control_mensajes_Textview_Regist_A(
-                    mensaje_label="Error de instalación de módulo",
-                    mensaje_textview=f"[ERROR] Ocurrió un error inesperado al procesar {ruta}. Instalación cancelada. Detalles: {e}"
+                    mensaje_label="Error inesperado",
+                    mensaje_textview=f"[ERROR] Ocurrió un error inesperado al procesar {ruta}: {e}"
                 )
 
+    def descubrir_rutas_modmeri(self,ruta_modulo):
+        """
+        Descubre los archivos .modmeri en la ruta dada.
+        Retorna lista de rutas válidas o [] si no se encuentra nada.
+        """
+        rutas_validas = []
+
+        if os.path.isdir(ruta_modulo):
+            for archivo in os.listdir(ruta_modulo):
+                if archivo.endswith(".modmeri"):
+                    rutas_validas.append(os.path.join(ruta_modulo, archivo))
+
+        elif os.path.isfile(ruta_modulo) and ruta_modulo.endswith(".modmeri"):
+            rutas_validas.append(ruta_modulo)
+
+        return rutas_validas
+
+    def validar_datos_json(self, datos):
+        """
+        Valida que el JSON tenga los campos mínimos requeridos.
+        Retorna True si es válido, False si falta algún campo.
+        """
+        campos_requeridos = [
+            "id",
+            "Archivo_Principal",
+            "Nombre_del_Modulo",
+            "version",
+            "Version_Minima_MERIDA",
+            "Autor_del_Modulo",
+            "Correo_Electronico_del_Autor", 
+        ]
+        
+        
+        for campo in campos_requeridos:
+            if campo not in datos or not datos[campo]:
+                return False
+        
+        return True
+
+    def verificar_version_merida(self, datos, version_actual_merida):
+        """
+        Compara la versión mínima requerida con la versión actual de MERIDA.
+        Retorna True si es compatible, False si no.
+        """
+        version_requerida = version.parse(datos.get("Version_Minima_MERIDA", "1.0.0"))
+        
+        if version_actual_merida < version_requerida:
+            return False
+        
+        return True
+
+    def verificar_dependencias(self, datos, can_check_deps, _pkg_version, PackageNotFoundError):
+        """
+        Verifica las dependencias declaradas en el JSON.
+        Retorna una lista de resultados en la forma:
+        [("nombre_paquete", "INSTALADO"/"NO INSTALADO"/"DESCONOCIDO", "versión o error")]
+        """
+        resultados = []
+        deps_field = datos.get("Dependencias", None)
+        deps_list = []
+
+        if deps_field:
+            if isinstance(deps_field, list):
+                deps_list = [str(d).strip() for d in deps_field if str(d).strip()]
+            elif isinstance(deps_field, str):
+                if deps_field.strip().lower() not in ("ninguno", "none", ""):
+                    deps_list = [d.strip() for d in deps_field.split(",") if d.strip()]
+
+        for dep in deps_list:
+            estado, info = "DESCONOCIDO", ""
+            if can_check_deps and _pkg_version is not None:
+                import re
+                m = re.split(r"(==|>=|<=|>|<)", dep, maxsplit=1)
+                pkg_name = m[0].strip()
+                try:
+                    installed_ver = _pkg_version(pkg_name)
+                    estado, info = "INSTALADO", installed_ver
+                except PackageNotFoundError:
+                    estado, info = "NO INSTALADO", ""
+                except Exception as e:
+                    estado, info = "DESCONOCIDO", str(e)
+            resultados.append((dep, estado, info))
+
+        return resultados
+
+    def instalar_archivo_principal(self, archivo_zip, datos, ruta_destino):
+        """
+        Copia el archivo principal del módulo en la carpeta de destino.
+        Retorna la ruta al archivo copiado o None si falla.
+        """
+        archivo_principal = datos.get("Archivo_Principal")
+        if not archivo_principal or archivo_principal not in archivo_zip.namelist():
+            return None
+
+        destino_py = os.path.join(ruta_destino, f"{datos['id']}.py")
+        try:
+            with archivo_zip.open(archivo_principal) as src, open(destino_py, "wb") as dst:
+                shutil.copyfileobj(src, dst)
+            return destino_py
+        except Exception:
+            return None
+
+    def instalar_icono(self, archivo_zip, datos, ruta_iconos):
+        """
+        Copia el icono del módulo a la carpeta de iconos de MERIDA.
+        - Si no existe, retorna el icono predeterminado.
+        - Si falla la copia, también retorna el icono predeterminado.
+        Retorna la ruta final al icono.
+        """
+        ruta_icono_final_preder = obtener_ruta_icono_Preder()
+        icono_arch = datos.get("icono")
+        if not icono_arch or icono_arch not in archivo_zip.namelist():
+            
+            return ruta_icono_final_preder
+
+        os.makedirs(ruta_iconos, exist_ok=True)
+        nombre_icono_final = f"{datos['id']}.svg"
+        ruta_icono_final = os.path.join(ruta_iconos, nombre_icono_final)
+
+        try:
+            with archivo_zip.open(icono_arch) as src, open(ruta_icono_final, "wb") as dst:
+                shutil.copyfileobj(src, dst)
+            return ruta_icono_final
+        
+        except Exception:
+            return ruta_icono_final_preder
+                                
+    def instalar_recursos_extra(self, archivo_zip, datos, ruta_modulo_individual):
+        """
+        Extrae recursos extra desde el ZIP si existen en carpeta 'recursos/'.
+        Retorna la ruta de la carpeta de recursos creada o None si no había recursos.
+        """
+        recursos_extras = datos.get("Recursos_extras")
+        if not recursos_extras or str(recursos_extras).strip().lower() in ("ninguno", "none", ""):
+            return None
+
+        carpeta_recursos = os.path.join(ruta_modulo_individual, "recursos")
+        os.makedirs(carpeta_recursos, exist_ok=True)
+
+        for recurso in archivo_zip.namelist():
+            if recurso.startswith("recursos/"):
+                archivo_zip.extract(recurso, carpeta_recursos)
+
+        return carpeta_recursos
+
+    def registrar_modulo(self, datos, destino_py, icono_ubicacion):
+        """
+        Registra el módulo en la base de datos.
+        Retorna True si se registró con éxito, False si ya existía.
+        """
+        if self.BD_Moduls_Functions.validar_unico("Identificador_Modulo", datos['id']) is not None:
+            return False
+
+        Registro_nuevo = BD_Moduls()
+        Registro_nuevo.Nombre_Modulo = datos.get('Nombre_del_Modulo', '<sin nombre>')
+        Registro_nuevo.Identificador_Modulo = datos['id']
+        Registro_nuevo.Version_Modulo = datos.get('version', '<sin versión>')
+        Registro_nuevo.Autor_Modulo = datos.get('Autor_del_Modulo', '<sin autor>')
+        Registro_nuevo.CorreoElectronico_Autor = datos.get('Correo_Electronico_del_Autor', '<sin correo>')
+        Registro_nuevo.Descripcion_Modulo = datos.get('descripcion', '<sin descripción>')
+        Registro_nuevo.Arch_Principal_Ejecucion = datos.get('Archivo_Principal', '<sin archivo>')
+        Registro_nuevo.Arch_Icono_Ubicacion = icono_ubicacion
+        Registro_nuevo.Recursos_Adicionales = datos.get('Recursos_extras', '<sin recursos>')
+        Registro_nuevo.Dependencias_Especiales = datos.get('Dependencias', '<sin dependencias>')
+        Registro_nuevo.Estado_Modulo = True
+        Registro_nuevo.Ubicacion_Modulo = destino_py
+
+        self.BD_Moduls_Functions.registrar_nuevas_listas(Registro_nuevo)
+        return True
+ 
