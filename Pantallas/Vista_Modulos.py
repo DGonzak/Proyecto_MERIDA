@@ -58,9 +58,20 @@ class pantalla_modulos(Gtk.Window):
         self.Entry_Busqueda.set_hexpand(True)
 
         #Espacio central para mostrar los módulos
-        #Aún no se desarrolló
+        
         self.Label_Sin_Modulos = Gtk.Label(label="Aún no hay módulos o complementos instalados.")
 
+        self.FlowBox_Modulos = Gtk.FlowBox()
+        self.FlowBox_Modulos.set_valign(Gtk.Align.START)
+        self.FlowBox_Modulos.set_max_children_per_line(4)
+        self.FlowBox_Modulos.set_selection_mode(Gtk.SelectionMode.NONE)
+
+        ruta_icono = "/home/dgonzak/DGonzak/DGonzak_Ada-Lovelace_LA/CPTD/Proyecto_MERIDA/Codigo_Fuente/Modulos_Desarrollo/Linea_de_Tiempo/Icono_Linea_de_Tiempo.svg"
+
+        icono1 = self.crear_entrada_modulo(icono_path=ruta_icono, nombre_modulo="Línea de Tiempo", version_modulo="v0.1.0")
+        
+        self.FlowBox_Modulos.append(icono1)
+               
 
         #Botones inferiores
         self.boton_instalar = Gtk.Button(label="Instalar módulo")
@@ -75,7 +86,7 @@ class pantalla_modulos(Gtk.Window):
         #-------------------Inserción a la ventana-------------------
         box_sup.append(self.Entry_Busqueda)
         
-        box_cent.append(self.Label_Sin_Modulos)
+        box_cent.append(self.FlowBox_Modulos)
 
         box_infer.append(self.boton_instalar)
         box_pr.append(box_sup)
@@ -574,3 +585,47 @@ class pantalla_modulos(Gtk.Window):
         self.BD_Moduls_Functions.registrar_nuevas_listas(Registro_nuevo)
         return True
  
+    def crear_entrada_modulo(self, icono_path, nombre_modulo, version_modulo):
+        """
+        Crea un widget "visual" para representar un módulo instalado.
+        Se compone de :
+            1. Icono del módulo
+            2. Nombre del módulo
+            3. Versión del módulo
+
+        El widget, al ser presionado, mostrará más detalles del módulo en una ventana aparte.
+        """
+
+        btn_CR_Modulo = Gtk.Button()
+        btn_CR_Modulo.set_hexpand(False)
+        btn_CR_Modulo.set_vexpand(False)
+
+        box_most = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
+        box_text = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        
+        box_image = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
+        box_image.set_halign(Gtk.Align.CENTER)
+        box_image.set_hexpand(True)
+        box_image.set_vexpand(True)
+
+        #logo / icono
+        logo = Gtk.Picture.new_for_filename(icono_path)
+        logo.set_content_fit(Gtk.ContentFit.CONTAIN)
+        logo.set_size_request(64, 64)  # tamaño fijo recomendado
+
+        # Nombre del módulo y Version (texto)
+        label_nombre = Gtk.Label(label=nombre_modulo)
+        label_version = Gtk.Label(label=version_modulo)
+
+        #Organización de widgets
+        box_image.append(logo)
+
+        box_text.append(label_nombre)
+        box_text.append(label_version)
+
+        box_most.append(box_image)
+        box_most.append(box_text)
+
+        btn_CR_Modulo.set_child(box_most)
+
+        return btn_CR_Modulo
