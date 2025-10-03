@@ -85,19 +85,39 @@ class BD_Moduls_Functions():
 
         return lista_registros if modo == "lista" else dict_registros
 
-    def eliminar_registros (self, id_get):
+    def eliminar_registros(self, id_get=None, identificador_modul=None):
         """
-        Elimina un registro específico de la base de datos, dada su ID.
+        Elimina un registro específico de la base de datos, dado su ID o su Identificador de módulo.
 
         Parámetros:
-        - id_get: ID del registro que se desea eliminar.
+            - id_get (int): ID del registro a eliminar.
+            - identificador_modul (str): Identificador único del módulo a eliminar.
+
+        Reglas:
+            - Si se especifica `id_get`, se usará ese criterio.
+            - Si no hay `id_get` pero sí `identificador_modul`, se usará este.
+            - Si no se pasa ninguno, no se hace nada.
+            - Si se pasan ambos, tendrá prioridad `id_get`.
+
+        Retorna:
+            int -> número de registros eliminados.
         """
-
         with Session(self.conexion) as Sesion_Moduls:
-            """Se realiza una consulta y se filtra mediante una ID que será igual a lo que se pase por id_get"""
+            query = None
 
-            Sesion_Moduls.query(Mbd).filter_by(ID = id_get).delete()
+            if id_get is not None:
+                query = Sesion_Moduls.query(Mbd).filter(Mbd.ID == id_get)
+            elif identificador_modul is not None:
+                query = Sesion_Moduls.query(Mbd).filter(Mbd.Identificador_Modulo == identificador_modul)
+            else:
+                return 0  # No se proporcionó criterio de eliminación
+
+            eliminados = query.delete()
             Sesion_Moduls.commit()
+
+            return eliminados
+
+
 
     def validar_unico(self, propiedad_a_verificar: str, contenido_a_buscar: str):
         """

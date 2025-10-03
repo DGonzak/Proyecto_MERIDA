@@ -1,0 +1,20 @@
+Bienvenido al sistema de desinstalación de módulos de MERIDA.
+
+Antes de continuar, tenga en cuenta lo siguiente:
+
+El sistema eliminará:
+
+    1. La carpeta principal del módulo dentro del directorio de módulos de MERIDA.
+
+    2. El icono o logotipo correspondiente almacenado en el directorio de iconos de MERIDA.
+
+    3. El registro del módulo en la base de datos de MERIDA.
+
+El sistema no eliminará:
+
+    1. Archivos o datos creados por el usuario mediante el módulo y que estén fuera del directorio de módulos de MERIDA.
+
+    2. Archivos del módulo almacenados en las rutas predeterminadas de MERIDA (como datos de usuario, temporales, recurrentes o de configuración).
+
+
+Para más información sobre las rutas predeterminadas de MERIDA y su función, consulte el manual de usuario.

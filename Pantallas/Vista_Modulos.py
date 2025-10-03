@@ -86,8 +86,6 @@ class pantalla_modulos(Gtk.Window):
         self.boton_instalar.connect("clicked", self.instalar_modulo_Interfaz)
         #---------------------Extras-------------------------
         #Creación del log a utilizar para guardar los registros de instalación de módulos
-        self.intall_log_modul = escribir_log("=== Inicio del log de instalación de módulos ===", categoria="módulos")
-
         
         #-------------------Inserción a la ventana-------------------
         box_sup.append(self.Entry_Busqueda)
@@ -185,8 +183,10 @@ class pantalla_modulos(Gtk.Window):
             nuevo_texto = texto_actual + mensaje_textview + "\n"
             buffer_tv.set_text(nuevo_texto)
 
-            #Guardar en log startup
-            escribir_log(mensaje_textview, categoria="módulos", log_file=self.intall_log_modul)
+            #Guardar en log
+            #Se usa para 0 para mantener todos los logs. Además, se crea un nuevo 
+            #archivo por cada instalación. Estos archivos no tienen titulo.
+            escribir_log(mensaje_textview, categoria="módulos", mantener_n=0)
 
     def seleccionar_modulo_ArchCarpet(self, widget=None, tipo=None):
         """
@@ -664,7 +664,7 @@ class pantalla_modulos(Gtk.Window):
             transient_for=self.get_root(),
             modal=True,
         )
-        Vent_ModulInfor.set_default_size(1000, 400)
+        Vent_ModulInfor.set_default_size(1400, 800)
         
         #=======Contenedores================
         content_area = Vent_ModulInfor.get_content_area()
@@ -761,6 +761,7 @@ class pantalla_modulos(Gtk.Window):
         
         #Botones
         btn_desinstalarModul = Gtk.Button(label="Desinstalar Módulo")
+        btn_desinstalarModul.connect("clicked", self.desinstalar_Modulo, datos_modulo)
 
 
 
@@ -795,3 +796,189 @@ class pantalla_modulos(Gtk.Window):
 
         content_area.append(box_pr)
         Vent_ModulInfor.show()
+    
+    def desinstalar_Modulo(self,widget=None, datos_modulo_get=None):
+        """
+        Elimina los archivos del módulo. Para ello:
+
+        1.Identifica la carpeta "raíz" del módulo en el directorio de módulos de MERIDA
+        2.Elimina dicha carpeta "raíz"
+        3.Elimina el icono guardado en el directorio de iconos de MERIDA
+        4.Por último, elimina el registro del módulo en la base de datos.
+        """
+        def Iniciar_Eliminacion_Modulo(self, widget=None, datos2=None):
+            btn_Confir_Desinst.set_sensitive(False)
+            TextView_Infor_pr.get_buffer().set_text("")
+
+            nombre_modulo = datos2.get("nombre_modulo", "<sin-nombre>")
+            ubicacion_modulo = datos2.get("ubicacion_modulo")
+            ubicacion_icono = datos2.get("arch_icono_ubi")
+            identificador_modulo = datos2.get("identificador_modulo")
+
+            control_mensajes_infor_T(
+                mensaje_label=f"Desinstalando módulo <<{nombre_modulo}>>",
+                mensaje_textview=f"[INFO] Recuperando información del módulo <<{nombre_modulo}>>"
+            )
+
+            if not ubicacion_modulo or not identificador_modulo:
+                control_mensajes_infor_T(
+                    mensaje_label="Error de desinstalación",
+                    mensaje_textview="[ERROR] No se encontró información suficiente del módulo. "
+                                    "La desinstalación ha sido cancelada."
+                )
+                return
+
+            control_mensajes_infor_T(
+                mensaje_label=None,
+                mensaje_textview="[OK] Recuperada la información necesaria. Procesando eliminación de módulo..."
+            )
+
+            # ================= 1. Eliminar carpeta del módulo =================
+            ubicacion_carpeta_modulo = os.path.dirname(ubicacion_modulo)
+            control_mensajes_infor_T(
+                mensaje_label=None,
+                mensaje_textview=f"[INFO] Iniciando eliminación de la carpeta del módulo en: {ubicacion_carpeta_modulo}"
+            )
+            try:
+                if os.path.exists(ubicacion_carpeta_modulo):
+                    shutil.rmtree(ubicacion_carpeta_modulo)
+                    control_mensajes_infor_T(
+                        mensaje_label=None,
+                        mensaje_textview="[OK] Eliminación exitosa de la carpeta del módulo."
+                    )
+                else:
+                    control_mensajes_infor_T(
+                        mensaje_label=None,
+                        mensaje_textview=f"[ADVERTENCIA] La carpeta del módulo no existe en {ubicacion_carpeta_modulo}."
+                    )
+            except Exception as e:
+                control_mensajes_infor_T(
+                    mensaje_label="Error al eliminar carpeta",
+                    mensaje_textview=f"[ERROR] No se pudo eliminar la carpeta del módulo. Detalles: {e}"
+                )
+
+            # ================= 2. Eliminar icono del módulo =================
+            control_mensajes_infor_T(
+                mensaje_label=None,
+                mensaje_textview=f"[INFO] Iniciando eliminación del icono del módulo en: {ubicacion_icono}..."
+            )
+            try:
+                if ubicacion_icono and os.path.exists(ubicacion_icono):
+                    if os.path.isfile(ubicacion_icono):
+                        os.remove(ubicacion_icono)
+                        control_mensajes_infor_T(
+                            mensaje_label=None,
+                            mensaje_textview="[OK] Eliminación exitosa del icono del módulo."
+                        )
+                    else:
+                        control_mensajes_infor_T(
+                            mensaje_label=None,
+                            mensaje_textview=f"[ADVERTENCIA] La ruta del icono no es un archivo: {ubicacion_icono}"
+                        )
+                else:
+                    control_mensajes_infor_T(
+                        mensaje_label=None,
+                        mensaje_textview="[ADVERTENCIA] No se encontró el icono del módulo."
+                    )
+            except Exception as e:
+                control_mensajes_infor_T(
+                    mensaje_label="Error al eliminar icono",
+                    mensaje_textview=f"[ERROR] No se pudo eliminar el icono del módulo. Detalles: {e}"
+                )
+
+            # ================= 3. Eliminar registro de la BD =================
+            control_mensajes_infor_T(
+                mensaje_label=None,
+                mensaje_textview=f"[INFO] Iniciando eliminación del registro del módulo en BD_Moduls con identificador: <<{identificador_modulo}>>..."
+            )
+            try:
+                N_eliminados = self.BD_Moduls_Functions.eliminar_registros(identificador_modul=identificador_modulo)
+                if N_eliminados > 0:
+                    control_mensajes_infor_T(
+                        mensaje_label=None,
+                        mensaje_textview=f"[OK] Eliminación finalizada del registro. Se eliminaron {N_eliminados} registros."
+                    )
+                else:
+                    control_mensajes_infor_T(
+                        mensaje_label=None,
+                        mensaje_textview=f"[ADVERTENCIA] No se encontró ningún registro con el identificador <<{identificador_modulo}>>."
+                    )
+            except Exception as e:
+                control_mensajes_infor_T(
+                    mensaje_label="Error en base de datos",
+                    mensaje_textview=f"[ERROR] No se pudo eliminar el registro en la base de datos. Detalles: {e}"
+                )
+
+            # ================= Finalización =================
+            control_mensajes_infor_T(
+                mensaje_label="Desinstalación terminada",
+                mensaje_textview=f"[OK] Desinstalación completada del módulo {nombre_modulo}."
+            )
+
+
+        def control_mensajes_infor_T(mensaje_label=None, mensaje_textview=None):
+                """Muestra y controla los mensajes en la interfaz de desinstalación de módulos."""
+                if mensaje_label is not None:
+                    label_mensaje_pr.set_text(mensaje_label)
+
+                if mensaje_textview is not None:
+                    buffer_tv = TextView_Infor_pr.get_buffer()
+                    texto_actual = buffer_tv.get_text(
+                        buffer_tv.get_start_iter(), buffer_tv.get_end_iter(), True
+                    )
+                    nuevo_texto = texto_actual + mensaje_textview + "\n"
+                    buffer_tv.set_text(nuevo_texto)
+
+                    #Guardar en log
+                    escribir_log(mensaje_textview, categoria="módulos_desintal", mantener_n=0)
+
+        Vent_Eliminar_Modul = Gtk.Dialog(
+            title="Eliminación de Módulo MERIDA",
+            transient_for=self.get_root(),
+            modal=True,
+        )
+        Vent_Eliminar_Modul.set_default_size(900, 550)
+        content_area = Vent_Eliminar_Modul.get_content_area()
+
+        #==================Widgets del Aviso de Eliminación======================
+        box_pr1 = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=10)
+
+        label_mensaje_pr = Gtk.Label(
+            label=f"¿Esta seguro de la desinstalación del módulo {datos_modulo_get.get("nombre_modulo", "<sin-nombre>")}?")
+
+        TextView_Infor_pr = Gtk.TextView()
+        TextView_Infor_pr.set_wrap_mode(Gtk.WrapMode.WORD_CHAR)
+        TextView_Infor_pr.set_editable(False)
+        TextView_Infor_pr.set_focusable(False)
+
+        scroll_infor = Gtk.ScrolledWindow()
+        scroll_infor.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+        scroll_infor.set_child(TextView_Infor_pr)
+        scroll_infor.set_vexpand(True)
+        scroll_infor.set_hexpand(True)
+        
+        ruta_mensaje_infor_1 = os.path.join(get_recursos_dir(), "Texto", "explicacion_desinstalModMeri_2.txt")
+        
+        try:
+            with open(ruta_mensaje_infor_1) as txt:
+                contenido_txt = txt.read()
+        except Exception:
+            contenido_txt = "Archivo de explicación no encontrado."
+
+        TextView_Infor_pr.get_buffer().set_text(contenido_txt)
+
+
+        btn_Confir_Desinst = Gtk.Button(label="Confirmar desinstalación de módulo")
+        btn_Confir_Desinst.connect("clicked", Iniciar_Eliminacion_Modulo, datos_modulo_get)
+
+
+
+
+
+        box_pr1.append(label_mensaje_pr)
+        box_pr1.append(scroll_infor)
+        box_pr1.append(btn_Confir_Desinst)
+
+        content_area.append(box_pr1)
+
+        Vent_Eliminar_Modul.show()
