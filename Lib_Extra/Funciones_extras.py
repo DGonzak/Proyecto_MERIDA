@@ -524,38 +524,57 @@ def añadir_a_archivo_recurrente(nombre_archivo, tipo_archivo, estructura, nuevo
 # ===============================
 # Funciones referentes a: logs
 # ===============================
-def get_log_file(categoria="general", N_arch_mant=10):
+def get_log_file(categoria="general", N_arch_mant=10, mantener_n=None):
     """
     Devuelve la ruta de un log nuevo para la categoría indicada.
     Crea la carpeta si no existe y rota los antiguos si es necesario.
+
+    Args:
+        categoria (str): categoría del log (ej. "general", "error").
+        N_arch_mant (int): número de logs a mantener por defecto (compatibilidad).
+        mantener_n (int | None): 
+            - None → se usa N_arch_mant (modo antiguo).
+            - 0 o <0 → no se eliminan logs antiguos.
+            - >0 → se mantienen solo los últimos N logs.
     """
     log_dir = get_log_dir() / categoria
-    log_dir.mkdir(parents=True, exist_ok=True) #Crea la carpeta si no existe en base a la categoría
+    log_dir.mkdir(parents=True, exist_ok=True)  # Crea la carpeta si no existe
 
     # Crear nombre de archivo con timestamp
     timestamp = datetime.now().strftime("%Y-%m-%d_%H%M%S")
     log_file = log_dir / f"{categoria}_{timestamp}.log"
 
-    # Rotar: mantener solo los últimos N logs
-    logs_existentes = sorted(log_dir.glob(f"{categoria}_*.log"), key=os.path.getmtime)
-    if len(logs_existentes) >= N_arch_mant:
-        for viejo in logs_existentes[:-N_arch_mant+1]:
-            viejo.unlink()
+    # Decidir cuántos archivos mantener
+    if mantener_n is None:
+        mantener_n = N_arch_mant
 
-    #Devuelve la ruta para ser utilizado en escribir_log
+    # Rotar logs si está activado
+    if mantener_n > 0:
+        logs_existentes = sorted(log_dir.glob(f"{categoria}_*.log"), key=os.path.getmtime)
+        if len(logs_existentes) >= mantener_n:
+            for viejo in logs_existentes[:-mantener_n+1]:
+                viejo.unlink()
+
+    # Devuelve la ruta para ser utilizado en escribir_log
     return log_file
 
-def escribir_log(message, categoria="general", log_file=None):
+
+def escribir_log(message, categoria="general", log_file=None, mantener_n=None):
     """
     Escribe un mensaje en el log de la categoría indicada.
     - categoria: "startup", "general", "error", etc.
     - log_file: archivo en uso (ruta) (si no, crea uno nuevo para esta sesión).
+    - mantener_n: controla la rotación de logs:
+        None → usa el valor por defecto (10 en get_log_file).
+        0 o <0 → desactiva la rotación (mantiene todos los logs).
+        >0 → mantiene solo N logs más recientes.
     """
     if log_file is None:
-        log_file = get_log_file(categoria)
+        log_file = get_log_file(categoria, mantener_n=mantener_n)
 
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     with open(log_file, "a", encoding="utf-8") as f:
         f.write(f"[{timestamp}] {message}\n")
 
     return log_file
+
