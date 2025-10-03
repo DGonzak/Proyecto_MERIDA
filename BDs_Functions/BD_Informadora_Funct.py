@@ -6,6 +6,7 @@ import pytz
 from datetime import datetime
 
 from Lib_Extra.Rutas_Gestion import get_data_dir
+from Lib_Extra.Funciones_extras import Obtener_Lista_Regiones_Soportadas
 
 class BD_Informadora_Functions ():
 
@@ -447,12 +448,7 @@ class BD_Informadora_Functions ():
         """
 
         # Lista de regiones permitidas (puedes ampliarla)
-        lista_regiones = [
-            "America/La_Paz",
-            "America/Lima",
-            "America/Bogota",
-            "UTC"
-        ]
+        lista_regiones = Obtener_Lista_Regiones_Soportadas()
 
         if region_a_convertir not in lista_regiones:
             raise ValueError(f"Región no soportada: {region_a_convertir}")

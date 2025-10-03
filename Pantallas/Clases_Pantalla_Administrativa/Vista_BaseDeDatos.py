@@ -19,7 +19,7 @@ from BDs_Functions.Constructor_BDs import crear_BDs_Constructor
 from BDs_Functions.BD_Utilidades_Generales import BD_UtilidadesGenerales
 
 
-from Lib_Extra.Funciones_extras import mostrar_vent_IEO, guardar_archivo_tmp, leer_archivo_tmp, borrar_archivo_tmp, aplicar_estilos_css,obtener_archivo_mas_reciente_ResplArch, leer_archivo_recurrente
+from Lib_Extra.Funciones_extras import mostrar_vent_IEO, guardar_archivo_tmp, leer_archivo_tmp, borrar_archivo_tmp, aplicar_estilos_css,obtener_archivo_mas_reciente_ResplArch, leer_archivo_recurrente,formatear_y_convertir_fecha
 from Lib_Extra.Rutas_Gestion import get_data_dir,get_cache_dir,get_recursos_dir
 
 class BD_Informadora_Tab(GObject.Object):
@@ -274,13 +274,11 @@ class Vista_Base_De_Datos(Gtk.Box):
             # Transformar fecha si está presente
             fecha_cruda = datos.get("ultima_actualizacion")
             if fecha_cruda:
-                try:
-                    fecha_obj = datetime.fromisoformat(str(fecha_cruda))
-                    fecha_transformada = fecha_obj.strftime("%d-%m-%Y (Hora: %Hh:%Mm:%Ss)")
-                except Exception:
-                    fecha_transformada = "Fecha inválida"
+                # Usamos la función de conversión centralizada
+                fecha_transformada = formatear_y_convertir_fecha(str(fecha_cruda))
             else:
                 fecha_transformada = "Sin datos"
+
 
             # Transformar estado booleano
             estado_bool = datos.get("estado", False)

@@ -26,7 +26,7 @@ from packaging import version
 from datetime import datetime
 
 from Lib_Extra.Rutas_Gestion import get_recursos_dir, get_data_dir
-from Lib_Extra.Funciones_extras import escribir_log,obtener_ruta_icono_Preder
+from Lib_Extra.Funciones_extras import escribir_log,obtener_ruta_icono_Preder,formatear_y_convertir_fecha
 
 from BDs_Functions.Models_BD import BD_Moduls
 from BDs_Functions.BD_Moduls_Funct import BD_Moduls_Functions
@@ -682,17 +682,15 @@ class pantalla_modulos(Gtk.Window):
         #==========Extras===================
         fecha_cruda = datos_modulo.get("fecha_instalacion")
         if fecha_cruda:
-            try:
-                fecha_obj = datetime.fromisoformat(str(fecha_cruda))
-                fecha_transformada = fecha_obj.strftime("%d-%m-%Y (Hora: %Hh:%Mm:%Ss)")
-            except Exception:
-                fecha_transformada = "Fecha inválida"
+            # Usamos la función de conversión centralizada
+            fecha_transformada = formatear_y_convertir_fecha(str(fecha_cruda))
         else:
             fecha_transformada = "Sin datos"
 
+
         # Transformar estado booleano
-        estado_bool = datos_modulo.get("estado", False)
-        estado_transformado = "Instalado" if estado_bool else "Desconocido"
+        estado_bool = datos_modulo.get("estado_modulo", False)
+        estado_transformado = "Instalado" if estado_bool else "Sin Uso"
 
         def configurar_entry():
             return {

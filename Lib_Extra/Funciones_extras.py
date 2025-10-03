@@ -4,6 +4,7 @@ import gi
 gi.require_version("Gtk", "4.0")
 from gi.repository import Gtk, GLib, Gdk
 from datetime import datetime
+import pytz
 
 from Lib_Extra.Rutas_Gestion import get_config_dir, get_cache_dir, get_log_dir,get_recursos_dir
 
@@ -16,6 +17,15 @@ CARPETA_ARCHIVOS_RECURRENTES_SUP = os.path.join(get_config_dir(), "Archivos_Recu
 # ============================================
 # Funciones referentes a: Utilidades Varias
 # ============================================
+def Obtener_Lista_Regiones_Soportadas():
+    lista_regiones = [
+            "America/La_Paz",
+            "America/Lima",
+            "America/Bogota",
+            "UTC"
+        ]
+    
+    return lista_regiones
 
 def Reempla_espacios_nombre(nombre_a_cambiar):
     """
@@ -192,6 +202,51 @@ def obtener_ruta_icono_Preder():
     ruta_Icono_Preder = os.path.join(get_recursos_dir(), "Imágenes", "Logo_MERIDA_Solo_Sin-Fondo_02.svg")
     
     return ruta_Icono_Preder
+
+def formatear_y_convertir_fecha(fecha_str):
+    """
+    Convierte una fecha en formato UTC a la hora local según la zona horaria
+    especificada en Ajustes_Generales.json y la devuelve formateada como string.
+
+    Flujo:
+        1. Carga la configuración (zona horaria).
+        2. Convierte la fecha UTC a hora local en esa zona.
+        3. Formatea la fecha a dd-mm-YYYY (Hora: HHh:MMm:SSs).
+        4. Devuelve el string con la región incluida.
+
+    :param fecha_str: Fecha/hora en formato ISO (ej. "2025-09-30T12:00:00")
+    :return: str con la fecha formateada, o mensaje de error.
+    """
+
+    try:
+        # Leer la configuración
+        region_get = leer_archivo_recurrente("Ajustes_Generales.json", "json")
+        region_select = region_get.get("Zona_Horaria", "UTC")
+
+        # Lista de regiones soportadas
+        lista_regiones = Obtener_Lista_Regiones_Soportadas()
+
+        if region_select not in lista_regiones:
+            return f"Fecha inválida o Región no soportada: {region_select}"
+
+        # Parsear la fecha de entrada
+        hora_UTC = datetime.fromisoformat(fecha_str)
+
+        # Asegurar que tenga tzinfo UTC
+        if hora_UTC.tzinfo is None:
+            hora_UTC = hora_UTC.replace(tzinfo=pytz.utc)
+
+        # Convertir a zona local
+        zona_destino = pytz.timezone(region_select)
+        fecha_local = hora_UTC.astimezone(zona_destino)
+
+        # Formatear resultado
+        fecha_final = f"{fecha_local.strftime('%d-%m-%Y (Hora: %Hh:%Mm:%Ss)')}  Región: {region_select}"
+        return fecha_final
+
+    except Exception as e:
+        return f"Fecha inválida o error en la conversión: {e}"
+
 # ============================================
 # Funciones referentes a: Archivos Temporales
 # ============================================
